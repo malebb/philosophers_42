@@ -12,6 +12,7 @@ typedef struct			s_data
 {
 	int					fork_nb;
 	long long int		first_ts;
+	pthread_mutex_t		lock;
 }						t_data;
 
 typedef	struct			s_philo
@@ -130,6 +131,7 @@ t_data		*init_data(long long int first_ts, int fork_nb)
 		return (NULL);
 	data->first_ts = first_ts;
 	data->fork_nb = fork_nb;
+	pthread_mutex_init(&(data->lock));
 	return (data);
 }
 
