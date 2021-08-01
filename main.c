@@ -6,13 +6,14 @@
 #include <stdlib.h>
 
 #define NB_PHILO 3
-#define NB_FORK 3
+#define NB_FORK 6
 
 typedef struct			s_data
 {
 	int					fork_nb;
 	long long int		first_ts;
 	pthread_mutex_t		lock;
+	int					eaten_id;
 }						t_data;
 
 typedef	struct			s_philo
@@ -30,20 +31,24 @@ void	*test(void *data_philo)
 	long long int		time;
 	t_philo				*philo;
 	struct timeval		tp;
-
 	philo = (t_philo*)data_philo;
 
 	while (1)
 	{
 		gettimeofday(&tp, NULL);
+		pthread_mutex_lock(&philo->data->lock);
 		if (philo->data->fork_nb >= 2)
 		{
-			time = ((tp.tv_sec * 1000000 + tp.tv_usec) - philo->data->first_ts) / 1000;
-			printf("%lld, %d has taken a fork\n", time, philo->id);
 			philo->data->fork_nb-=2;
+			pthread_mutex_unlock(&philo->data->lock);
+			time = ((tp.tv_sec * 1000000 + tp.tv_usec) - philo->data->first_ts) / 1000;
+			printf("%lld, %d has taken a fork | remain = %d\n", time, philo->id, philo->data->fork_nb);
 			usleep(5000000);
 			philo->data->fork_nb+=2;
+			philo->data->eaten_id = philo->id;
 		}
+		else
+			pthread_mutex_unlock(&philo->data->lock);
 	}
 	printf("nickel\n");
 	
@@ -131,7 +136,8 @@ t_data		*init_data(long long int first_ts, int fork_nb)
 		return (NULL);
 	data->first_ts = first_ts;
 	data->fork_nb = fork_nb;
-	pthread_mutex_init(&(data->lock));
+	if (pthread_mutex_init(&(data->lock), NULL))
+		return (NULL);
 	return (data);
 }
 
