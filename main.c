@@ -5,12 +5,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define NB_PHILO 3
-#define NB_FORK 6
+#define NB_PHILO 4
+#define	TIME_TO_DIE 2
+#define	TIME_TO_EAT 200
+#define	TIME_TO_SLEEP 200
 
 typedef struct			s_data
 {
-	int					fork_nb;
 	long long int		first_ts;
 	pthread_mutex_t		lock;
 	int					eaten_id;
@@ -20,39 +21,98 @@ typedef	struct			s_philo
 {
 	t_data				*data;
 	int 				id;
-	int					fork;
+	int					fork_r;
+	int					fork_l;
 	int					sleeping;
 	int					thinking;
 	struct	s_philo		*next;
+	struct	s_philo		*prev;
+	int					last;
+	long long int		last_eat;
 }						t_philo;
+
+long long int		get_prog_time(t_philo *philo)
+{
+	struct timeval		tp;
+	
+	gettimeofday(&tp, NULL);
+	return (((tp.tv_sec * 1000000 + tp.tv_usec) - philo->data->first_ts) / 1000);
+}
+
+void	take_fork(t_philo *philo)
+{
+	long long int		time;
+
+	time = get_prog_time(philo);
+	philo->fork_l = 0;
+	philo->fork_r = 0;
+	philo->prev->fork_r = 0;
+	philo->next->fork_l = 0;
+	printf("%lld %d has taken a fork\n", time, philo->id);
+}
+
+void	think(t_philo *philo)
+{
+	long long int		time;
+
+	time = get_prog_time(philo);
+	printf("%lld %d is thinking\n", time, philo->id);
+}
+
+void	rest(t_philo *philo)
+{
+	long long int		time;
+
+	time = get_prog_time(philo);
+	printf("%lld %d is sleeping\n", time, philo->id);
+	usleep(TIME_TO_SLEEP);
+}
+
+int		eat(t_philo *philo)
+{
+	long long int		time;
+
+	time = get_prog_time(philo);
+	philo->fork_l = 1;
+	philo->fork_r = 1;
+	philo->prev->fork_r = 1;
+	philo->next->fork_l = 1;
+	printf("HERE = %d\n", (time - philo->last_eat));
+	if ((time - philo->last_eat) > TIME_TO_DIE)
+	{
+		printf("%lld %d died\n", time, philo->id);
+		return (0);
+	}
+	printf("%lld %d is eating\n", time, philo->id);
+	philo->last_eat = time;
+	usleep(TIME_TO_EAT);
+	return (1);
+}
 
 void	*test(void *data_philo)
 {
-	long long int		time;
 	t_philo				*philo;
-	struct timeval		tp;
 	philo = (t_philo*)data_philo;
 
 	while (1)
 	{
-		gettimeofday(&tp, NULL);
 		pthread_mutex_lock(&philo->data->lock);
-		if (philo->data->fork_nb >= 2)
+		if (philo->fork_l && philo->fork_r)
 		{
-			philo->data->fork_nb-=2;
+			take_fork(philo);
+			if (!eat(philo))
+			{
+				pthread_mutex_unlock(&philo->data->lock);
+				break;
+			}
 			pthread_mutex_unlock(&philo->data->lock);
-			time = ((tp.tv_sec * 1000000 + tp.tv_usec) - philo->data->first_ts) / 1000;
-			printf("%lld, %d has taken a fork | remain = %d\n", time, philo->id, philo->data->fork_nb);
-			usleep(5000000);
-			philo->data->fork_nb+=2;
-			philo->data->eaten_id = philo->id;
 		}
 		else
 			pthread_mutex_unlock(&philo->data->lock);
+		rest(philo);
+		think(philo);
 	}
-	printf("nickel\n");
-	
-	return ("YES");
+	return (NULL);
 }
 
 t_philo		*create_philo(int id)
@@ -63,10 +123,13 @@ t_philo		*create_philo(int id)
 	if (!philo)
 		return (NULL);
 	philo->id = id;
-	philo->fork = 0;
+	philo->fork_r = 1;
+	philo->fork_l = 1;
 	philo->sleeping = 0;
 	philo->thinking = 0;
 	philo->next = NULL;
+	philo->prev = NULL;
+	philo->last = 1;
 	return (philo);
 }
 
@@ -79,13 +142,21 @@ t_philo		*add_philo(t_philo **first_philo, int id)
 	if (!new_philo)
 		return (NULL);
 	if (!(*first_philo))
+	{
 		*first_philo = new_philo;
+		(*first_philo)->next = *first_philo;
+		(*first_philo)->prev = *first_philo;
+	}
 	else
 	{
 		first = *first_philo;
-		while ((*first_philo)->next)
+		first->prev = new_philo;
+		while ((*first_philo)->last != 1)
 			(*first_philo) = (*first_philo)->next;
 		(*first_philo)->next = new_philo;
+		(*first_philo)->last = 0;
+		new_philo->prev = (*first_philo);
+		new_philo->next = first;
 		*first_philo = first;
 	}
 	return (*first_philo);
@@ -109,9 +180,11 @@ void	init_philo(t_philo *philo, int id, t_data *data)
 {
 	philo->data = data;
 	philo->id = id;
-	philo->fork = 0;
+	philo->fork_r = 1;
+	philo->fork_l = 1;
 	philo->sleeping = 0;
 	philo->thinking = 0;
+	philo->last_eat = 0;
 }
 
 t_philo		*n_philo(t_philo *philo, int n)
@@ -120,6 +193,7 @@ t_philo		*n_philo(t_philo *philo, int n)
 
 	i = 0;
 	while (i < n)
+
 	{
 		philo = philo->next;
 		i++;
@@ -127,7 +201,7 @@ t_philo		*n_philo(t_philo *philo, int n)
 	return (philo);
 }
 
-t_data		*init_data(long long int first_ts, int fork_nb)
+t_data		*init_data(long long int first_ts)
 {
 	t_data		*data;
 
@@ -135,7 +209,6 @@ t_data		*init_data(long long int first_ts, int fork_nb)
 	if (!data)
 		return (NULL);
 	data->first_ts = first_ts;
-	data->fork_nb = fork_nb;
 	if (pthread_mutex_init(&(data->lock), NULL))
 		return (NULL);
 	return (data);
@@ -158,20 +231,20 @@ int	main(int argc, char **argv)
 		printf("Error arguments: NUMBER_OF_PHILOSOPHERS TIME_TO_DIE TIME_TO_EAT TIME_TO_SLEEP [NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT]\n");
 	first_philo = NULL;
 	create_n_philo(&first_philo, NB_PHILO);
-	data = init_data(first_ts, NB_FORK);
+	data = init_data(first_ts);
 	i = 1;
-	while  (first_philo)
+	while  (first_philo->last != 1)
 	{
 		init_philo(first_philo, i, data);
 		pthread_create(&th[i - 1], NULL, &test, first_philo);
-//		else if (i == 1) //			pthread_create(&th[i], NULL, &test, "2"); //		else if (i == 2)
-//			pthread_create(&th[i], NULL, &test, "3");
 		first_philo = first_philo->next;
 		i++;
 	}
+	init_philo(first_philo, i, data);
+	pthread_create(&th[i - 1], NULL, &test, first_philo);
+	first_philo = first_philo->next;
 	pthread_join(th[0], NULL);
 	pthread_join(th[1], NULL);
 	pthread_join(th[2], NULL);
-	printf("this is the end\n");
 	return (0);
 }
