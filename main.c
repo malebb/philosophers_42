@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #define NB_PHILO 4
-#define	TIME_TO_DIE 2
+#define	TIME_TO_DIE 310
 #define	TIME_TO_EAT 200
 #define	TIME_TO_SLEEP 200
 
@@ -34,7 +34,7 @@ typedef	struct			s_philo
 long long int		get_prog_time(t_philo *philo)
 {
 	struct timeval		tp;
-	
+
 	gettimeofday(&tp, NULL);
 	return (((tp.tv_sec * 1000000 + tp.tv_usec) - philo->data->first_ts) / 1000);
 }
@@ -57,15 +57,14 @@ void	think(t_philo *philo)
 
 	time = get_prog_time(philo);
 	printf("%lld %d is thinking\n", time, philo->id);
-}
-
+} 
 void	rest(t_philo *philo)
 {
 	long long int		time;
 
 	time = get_prog_time(philo);
 	printf("%lld %d is sleeping\n", time, philo->id);
-	usleep(TIME_TO_SLEEP);
+	usleep(TIME_TO_SLEEP * 1000);
 }
 
 int		eat(t_philo *philo)
@@ -77,7 +76,8 @@ int		eat(t_philo *philo)
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
-	printf("HERE = %d\n", (time - philo->last_eat));
+	if (philo->id == 1)
+		printf("TIME = %lld | LAST_EAT = %lld\n", time, philo->last_eat);
 	if ((time - philo->last_eat) > TIME_TO_DIE)
 	{
 		printf("%lld %d died\n", time, philo->id);
@@ -85,7 +85,7 @@ int		eat(t_philo *philo)
 	}
 	printf("%lld %d is eating\n", time, philo->id);
 	philo->last_eat = time;
-	usleep(TIME_TO_EAT);
+	usleep(TIME_TO_EAT * 1000);
 	return (1);
 }
 
@@ -103,7 +103,7 @@ void	*test(void *data_philo)
 			if (!eat(philo))
 			{
 				pthread_mutex_unlock(&philo->data->lock);
-				break;
+				break ;
 			}
 			pthread_mutex_unlock(&philo->data->lock);
 		}
@@ -193,7 +193,6 @@ t_philo		*n_philo(t_philo *philo, int n)
 
 	i = 0;
 	while (i < n)
-
 	{
 		philo = philo->next;
 		i++;
