@@ -5,16 +5,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define NB_PHILO 4
-#define	TIME_TO_DIE 310
-#define	TIME_TO_EAT 200
-#define	TIME_TO_SLEEP 200
 
 typedef struct			s_data
 {
-	long long int		first_ts;
-	pthread_mutex_t		lock;
-	int					eaten_id;
+	pthread_t					*th;
+	long long int				first_ts;
+	pthread_mutex_t				lock;
+	int							eaten_id;
+	unsigned long long int		nb_philo;
+	unsigned long long int		time_to_die;
+	unsigned long long int		time_to_eat;
+	unsigned long long int		time_to_sleep;
+	unsigned long long int		time_each_philo_must_eat;
 }						t_data;
 
 typedef	struct			s_philo
@@ -64,7 +66,7 @@ void	rest(t_philo *philo)
 
 	time = get_prog_time(philo);
 	printf("%lld %d is sleeping\n", time, philo->id);
-	usleep(TIME_TO_SLEEP * 1000);
+	usleep(philo->data->time_to_sleep * 1000);
 }
 
 int		eat(t_philo *philo)
@@ -76,16 +78,14 @@ int		eat(t_philo *philo)
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
-	if (philo->id == 1)
-		printf("TIME = %lld | LAST_EAT = %lld\n", time, philo->last_eat);
-	if ((time - philo->last_eat) > TIME_TO_DIE)
+	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
 	{
 		printf("%lld %d died\n", time, philo->id);
 		return (0);
 	}
 	printf("%lld %d is eating\n", time, philo->id);
 	philo->last_eat = time;
-	usleep(TIME_TO_EAT * 1000);
+	usleep(philo->data->time_to_eat * 1000);
 	return (1);
 }
 
@@ -213,9 +213,95 @@ t_data		*init_data(long long int first_ts)
 	return (data);
 }
 
+unsigned long long int ft_atoi(char *nb)
+{
+	unsigned long long int		nbr;
+	int				i;
+
+	i = 0;
+	nbr = 0;
+	while (nb[i] != '\0')
+	{
+		nbr *= 10;
+		nbr += (nb[i] - '0');
+		i++;
+	}
+	return (nbr);
+}
+
+int		is_digit(char c)
+{
+	if (c >= '0' && c <= '9')
+		return (1);
+	return (0);
+}
+
+int		is_number(char *argv, int index)
+{
+	int		i;
+
+	i = 0;
+	while (argv[i] != '\0')
+	{
+		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' && i != 0) || (argv[i] == '-' && argv[i + 1] == '\0'))
+		{
+			if (index == 1)
+				printf("Error: NB_OF_PHILO is invalid\n");
+			else if (index == 2)
+				printf("Error: TIME_TO_DIE is invalid\n");
+			else if (index == 3)
+				printf("Error: TIME_TO_EAT is invalid\n");
+			else if (index == 4)
+				printf("Error:  TIME_TO_SLEEP is invalid\n");
+			else if (index == 5)
+				printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT is invalid\n");
+			return (0); 
+		}
+		if (argv[i] == '-' && i == 0)
+		{
+			if (index == 1)
+				printf("Error: NB_OF_PHILO should be a positive number\n");
+			else if (index == 2)
+				printf("Error: TIME_TO_DIE should be a postitive number\n");
+			else if (index == 3)
+				printf("Error: TIME_TO_EAT should be a postitive number\n");
+			else if (index == 4)
+				printf("Error:  TIME_TO_SLEEP should be a postitive number\n");
+			else if (index == 5)
+				printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT should be a postitive number\n");
+			return (0);
+		}
+		i++;
+	}
+	return (1);
+}
+
+int	parse_arg(char **argv, int argc, t_data *data)
+{
+	int		i;
+
+	i = 1;
+	while (i < argc)
+	{
+		if (!is_number(argv[i], i))
+			return (0);
+		if (i == 1)
+			data->nb_philo = ft_atoi(argv[i]);
+		else if (i == 2)
+			data->time_to_die = ft_atoi(argv[i]);
+		else if (i == 3)
+			data->time_to_eat = ft_atoi(argv[i]);
+		else if (i == 4)
+			data->time_to_sleep = ft_atoi(argv[i]);
+		else if (i == 5)
+			data->time_each_philo_must_eat = ft_atoi(argv[i]);
+		i++;
+	}
+	return (1);
+}
+
 int	main(int argc, char **argv)
 {
-	pthread_t 			th[NB_PHILO];
 	int					i;
 	struct timeval		tp;
 	long long int		first_ts;
@@ -227,23 +313,35 @@ int	main(int argc, char **argv)
 	gettimeofday(&tp, NULL);
 	first_ts = tp.tv_sec * 1000000 + tp.tv_usec;
 	if (argc < 5 || argc > 6)
+	{
 		printf("Error arguments: NUMBER_OF_PHILOSOPHERS TIME_TO_DIE TIME_TO_EAT TIME_TO_SLEEP [NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT]\n");
-	first_philo = NULL;
-	create_n_philo(&first_philo, NB_PHILO);
+	}
 	data = init_data(first_ts);
+	parse_arg(argv, argc, data);
+	data->th = malloc(sizeof(t_data) * data->nb_philo);
+	if (!data->th)
+		return (1);
+	printf("nb of philo = %llu\n", data->nb_philo);
+	printf("time to die = %llu\n", data->time_to_die);
+	printf("time to eat = %llu\n", data->time_to_eat);
+	printf("time to sleep = %llu\n", data->time_to_sleep);
+	printf("time each philo must eat = %llu\n", data->time_each_philo_must_eat);
+	first_philo = NULL;
+	create_n_philo(&first_philo, data->nb_philo);
 	i = 1;
 	while  (first_philo->last != 1)
 	{
 		init_philo(first_philo, i, data);
-		pthread_create(&th[i - 1], NULL, &test, first_philo);
+		pthread_create(&(data->th[i - 1]), NULL, &test, first_philo);
 		first_philo = first_philo->next;
 		i++;
 	}
 	init_philo(first_philo, i, data);
-	pthread_create(&th[i - 1], NULL, &test, first_philo);
+	pthread_create(&(data->th[i - 1]), NULL, &test, first_philo);
 	first_philo = first_philo->next;
-	pthread_join(th[0], NULL);
-	pthread_join(th[1], NULL);
-	pthread_join(th[2], NULL);
+	pthread_join(data->th[0], NULL);
+	pthread_join(data->th[1], NULL);
+	pthread_join(data->th[2], NULL);
+	
 	return (0);
 }
