@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/16 13:35:21 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/16 15:29:57 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,17 +57,18 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 {
 	long long int		time_exceed;
 
-	if ((time + time_to) >= (long long)philo->data->time_to_die)
+	printf("id = %d last_eat = %lld time = %lld\n", philo->id, philo->last_eat, time);
+	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
 	{
-		time_exceed = ((time + time_to)) - philo->data->time_to_die;
-//		printf("ID = %d | %lld | %lld\n", philo->id, time_exceed, time_to);
-		usleep((((time + time_to) - philo->last_eat) - time_exceed) * 1000);
+		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
+		usleep(time_to + (time - philo->last_eat) * 1000);
 		time = get_prog_time(philo);
 		printf("%lld %d died\n", time, philo->id);
 		return (0);
 	}
 	else
-		usleep(philo->data->time_to_eat * 1000);
+		usleep(time_to * 1000);
+	printf("time_to = %lld", time_to);
 	return (1);
 }
 
@@ -80,7 +81,7 @@ void	take_fork(t_philo *philo)
 	philo->fork_r = 0;
 	philo->prev->fork_r = 0;
 	philo->next->fork_l = 0;
-//	printf("JUST CHANGE prev = %d R = %d L = %d\n", philo->prev->id, philo->prev->fork_r, philo->prev->fork_l);
+	printf("UNLOCKED\n");
 	pthread_mutex_unlock(&philo->data->lock);
 	printf("%lld %d has taken a fork\n", time, philo->id);
 }
@@ -118,16 +119,15 @@ int		eat(t_philo *philo)
 
 	time = get_prog_time(philo);
 	printf("%lld %d is eating\n", time, philo->id);
-//	printf("id = %d | sleep time in micro = %llu\n", philo->id, (philo->data->time_to_eat * 1000));
 	if (!practice_activity(philo, time, philo->data->time_to_eat))
 		return (0);
+	printf("EATEN\n");
 	philo->fork_l = 1;
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
 	time = get_prog_time(philo);
 	philo->last_eat = time;
-	printf("philo %d has eaten\n", philo->id);
 	return (1);
 }
 
@@ -143,7 +143,6 @@ void	*test(void *data_philo)
 		while (1)
 		{
 			pthread_mutex_lock(&philo->data->lock);
-		//printf("AFTER CHANGE prev = %d R = %d L = %d\n", philo->prev->id, philo->prev->fork_r, philo->prev->fork_l);
 			if (philo->fork_l && philo->fork_r)
 			{
 				take_fork(philo);
@@ -158,7 +157,6 @@ void	*test(void *data_philo)
 				died = 1;
 				break ;
 			}
-			//printf("coucou\n");
 		}
 		if (died)
 			break ;
