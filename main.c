@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/15 16:10:00 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/16 13:35:21 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 	if ((time + time_to) >= (long long)philo->data->time_to_die)
 	{
 		time_exceed = ((time + time_to)) - philo->data->time_to_die;
-		printf("ID = %d | %lld | %lld\n", philo->id, time_exceed, time_to);
+//		printf("ID = %d | %lld | %lld\n", philo->id, time_exceed, time_to);
 		usleep((((time + time_to) - philo->last_eat) - time_exceed) * 1000);
 		time = get_prog_time(philo);
 		printf("%lld %d died\n", time, philo->id);
