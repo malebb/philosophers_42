@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/16 15:29:57 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/18 15:07:24 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,18 +57,16 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 {
 	long long int		time_exceed;
 
-	printf("id = %d last_eat = %lld time = %lld\n", philo->id, philo->last_eat, time);
 	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
 	{
 		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
-		usleep(time_to + (time - philo->last_eat) * 1000);
+		usleep((time_to - time_exceed) * 1000);
 		time = get_prog_time(philo);
 		printf("%lld %d died\n", time, philo->id);
 		return (0);
 	}
 	else
 		usleep(time_to * 1000);
-	printf("time_to = %lld", time_to);
 	return (1);
 }
 
@@ -81,7 +79,6 @@ void	take_fork(t_philo *philo)
 	philo->fork_r = 0;
 	philo->prev->fork_r = 0;
 	philo->next->fork_l = 0;
-	printf("UNLOCKED\n");
 	pthread_mutex_unlock(&philo->data->lock);
 	printf("%lld %d has taken a fork\n", time, philo->id);
 }
@@ -118,16 +115,23 @@ int		eat(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
+	philo->last_eat = time;
 	printf("%lld %d is eating\n", time, philo->id);
-	if (!practice_activity(philo, time, philo->data->time_to_eat))
+
+	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
+	{
+		printf("%lld %d died\n", time, philo->id);
 		return (0);
-	printf("EATEN\n");
+	}
+	else
+		usleep(philo->data->time_to_eat * 1000);
+	time = get_prog_time(philo);
+	printf("%lld %d is done eating\n", time, philo->id);
 	philo->fork_l = 1;
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
-	time = get_prog_time(philo);
-	philo->last_eat = time;
+
 	return (1);
 }
 
@@ -159,7 +163,10 @@ void	*test(void *data_philo)
 			}
 		}
 		if (died)
+		{
+			
 			break ;
+		}
 		if (!rest(philo))
 			break ;
 		think(philo);
