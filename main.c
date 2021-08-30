@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/29 16:28:10 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/30 15:39:36 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,35 +263,41 @@ void	*test(void *data_philo)
 	{
 		time = get_prog_time(philo);
 		printf("%lld %d has taken a fork\n", time, philo->id);
+		ft_usleep(philo->data->time_to_die);
+		time = get_prog_time(philo);
+		printf("%lld %d died\n", time, philo->id);
 	}
-	while (1)
+	else
 	{
 		while (1)
 		{
-			pthread_mutex_lock(&philo->data->lock);
-			if (philo->fork_l && philo->fork_r && can_eat(philo))
+			while (1)
 			{
-	//			print_status(philo);
-				update_eat_status(philo);
-				take_fork(philo);
-				if (!eat(philo))
-					died = 1;
-				break ;
-			}
+				pthread_mutex_lock(&philo->data->lock);
+				if (philo->fork_l && philo->fork_r && can_eat(philo))
+				{
+					//			print_status(philo);
+					update_eat_status(philo);
+					take_fork(philo);
+					if (!eat(philo))
+						died = 1;
+					break ;
+				}
 
-			else
-				pthread_mutex_unlock(&philo->data->lock);
-			if (!is_dead(get_prog_time(philo), philo))
-			{
-				died = 1;
-				break ;
+				else
+					pthread_mutex_unlock(&philo->data->lock);
+				if (!is_dead(get_prog_time(philo), philo))
+				{
+					died = 1;
+					break ;
+				}
 			}
+			if (died)
+				break ;
+			if (!rest(philo))
+				break ;
+			think(philo);
 		}
-		if (died)
-			break ;
-		if (!rest(philo))
-			break ;
-		think(philo);
 	}
 	return (NULL);
 }
