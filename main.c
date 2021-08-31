@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/30 15:39:36 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/30 16:05:29 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -424,14 +424,14 @@ int		is_digit(char c)
 	return (0);
 }
 
-int		is_number(char *argv, int index)
+int		is_positive_number(char *argv, int index)
 {
 	int		i;
 
 	i = 0;
 	while (argv[i] != '\0')
 	{
-		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' && i != 0) || (argv[i] == '-' && argv[i + 1] == '\0'))
+		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' && i != 0) || (argv[i] == '-' && argv[i + 1] == '\0') || (i == 0  && argv[i] == '0') || (i == 1 && argv[0] == '-' && argv[i] == '0'))
 		{
 			if (index == 1)
 				printf("Error: NB_OF_PHILO is invalid\n");
@@ -471,7 +471,7 @@ int	parse_arg(char **argv, int argc, t_data *data)
 	i = 1;
 	while (i < argc)
 	{
-		if (!is_number(argv[i], i))
+		if (!is_positive_number(argv[i], i))
 			return (0);
 		if (i == 1)
 			data->nb_philo = ft_atoi(argv[i]);
@@ -507,7 +507,8 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	data = init_data(first_ts);
-	parse_arg(argv, argc, data);
+	if (!parse_arg(argv, argc, data))
+		return (1);
 	init_last_call(&(data->last_call), data->nb_philo);
 	data->th = malloc(sizeof(t_data) * data->nb_philo);
 	if (!data->th)
