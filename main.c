@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/30 16:05:29 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/08/31 15:03:04 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ unsigned long long int		get_current_ts(void)
 	return ((tp.tv_sec * 1000 + tp.tv_usec / 1000));
 }
 
-void	ft_usleep(unsigned long long int time)
+int	ft_usleep(unsigned long long int time, t_data *data)
 {
 	unsigned long long int		slept_t;
 	unsigned long long int		start_t;
@@ -74,10 +74,14 @@ void	ft_usleep(unsigned long long int time)
 	start_t = get_current_ts();
 	while (slept_t < time)
 	{
-		usleep(100);
+		if (!data->end)
+			usleep(100);
+		else
+			return (0);
 		current_t = get_current_ts();
 		slept_t = current_t - start_t;
 	}
+	return (1);
 }
 
 unsigned int		is_finished(t_philo *philo)
@@ -94,7 +98,8 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
 	{
 		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
-		ft_usleep(time_to - time_exceed);
+		if (!ft_usleep(time_to - time_exceed, philo->data))
+			return (0);
 		time = get_prog_time(philo);
 		if (!philo->data->end)
 		{
@@ -106,7 +111,10 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 			return (0);
 	}
 	else
-		ft_usleep(time_to);
+	{
+		if (!ft_usleep(time_to, philo->data))
+			return (0);
+	}
 	return (1);
 }
 
@@ -182,7 +190,10 @@ int		eat(t_philo *philo)
 		return (0);
 	}
 	else
-		ft_usleep(philo->data->time_to_eat);
+	{
+		if (!ft_usleep(philo->data->time_to_eat, philo->data))
+			return (0);
+	}
 	philo->fork_l = 1;
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
@@ -263,7 +274,7 @@ void	*test(void *data_philo)
 	{
 		time = get_prog_time(philo);
 		printf("%lld %d has taken a fork\n", time, philo->id);
-		ft_usleep(philo->data->time_to_die);
+		ft_usleep(philo->data->time_to_die, philo->data);
 		time = get_prog_time(philo);
 		printf("%lld %d died\n", time, philo->id);
 	}
@@ -276,7 +287,6 @@ void	*test(void *data_philo)
 				pthread_mutex_lock(&philo->data->lock);
 				if (philo->fork_l && philo->fork_r && can_eat(philo))
 				{
-					//			print_status(philo);
 					update_eat_status(philo);
 					take_fork(philo);
 					if (!eat(philo))
