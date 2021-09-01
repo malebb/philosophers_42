@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/08/31 15:03:04 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/09/01 14:31:42 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -520,7 +520,7 @@ int	main(int argc, char **argv)
 	if (!parse_arg(argv, argc, data))
 		return (1);
 	init_last_call(&(data->last_call), data->nb_philo);
-	data->th = malloc(sizeof(t_data) * data->nb_philo);
+	data->th = malloc(sizeof(pthread_t) * data->nb_philo);
 	if (!data->th)
 		return (1);
 	printf("nb of philo = %llu\n", data->nb_philo);
