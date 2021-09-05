@@ -230,7 +230,6 @@ int	can_eat(t_philo *philo)
 			return (1);
 		i--;
 	}
-	printf("YES\n");
 	return (1);
 }
 
@@ -267,6 +266,7 @@ void	*test(void *data_philo)
 	t_philo				*philo;
 	int					died;
 	long long int		time;
+
 
 	philo = (t_philo*)data_philo;
 	died = 0;
@@ -405,6 +405,8 @@ t_data		*init_data(long long int first_ts)
 	if (!data)
 		return (NULL);
 	data->first_ts = first_ts;
+	data->th = NULL;
+	data->last_call = NULL;
 	data->end = 0;
 	if (pthread_mutex_init(&(data->lock), NULL))
 		return (NULL);
@@ -498,6 +500,35 @@ int	parse_arg(char **argv, int argc, t_data *data)
 	return (1);
 }
 
+void	free_data(t_data *data)
+{
+	pthread_mutex_destroy(&(data->lock));
+	free(data->th);
+	free(data->last_call);
+	free(data);
+}
+
+void	free_philo(t_philo *philo, unsigned long long int nb_philo)
+{
+	t_philo		*prev;
+	unsigned int		i;
+
+	i = 0;
+	while (i < nb_philo)
+	{
+		prev = philo;
+		philo = philo->next;
+		free(prev);
+		i++;
+	}
+}
+
+void	free_content(t_data *data, t_philo *philo)
+{
+	free_philo(philo, data->nb_philo);
+	free_data(data);
+}
+
 int	main(int argc, char **argv)
 {
 	
@@ -518,16 +549,17 @@ int	main(int argc, char **argv)
 	}
 	data = init_data(first_ts);
 	if (!parse_arg(argv, argc, data))
+	{
+		free_data(data);
 		return (1);
+	}
 	init_last_call(&(data->last_call), data->nb_philo);
 	data->th = malloc(sizeof(pthread_t) * data->nb_philo);
 	if (!data->th)
+	{
+		free_data(data);
 		return (1);
-	printf("nb of philo = %llu\n", data->nb_philo);
-	printf("time to die = %llu\n", data->time_to_die);
-	printf("time to eat = %llu\n", data->time_to_eat);
-	printf("time to sleep = %llu\n", data->time_to_sleep);
-	printf("time each philo must eat = %llu\n", data->time_each_philo_must_eat);
+	}
 	first_philo = NULL;
 	create_n_philo(&first_philo, data->nb_philo);
 	i = 1;
@@ -541,8 +573,12 @@ int	main(int argc, char **argv)
 	init_philo(first_philo, i, data);
 	pthread_create(&(data->th[i - 1]), NULL, &test, first_philo);
 	first_philo = first_philo->next;
-	pthread_join(data->th[0], NULL);
-	pthread_join(data->th[1], NULL);
-	pthread_join(data->th[2], NULL);
+	i = 0;
+	while (i < (int)data->nb_philo)
+	{
+		pthread_join(data->th[i], NULL);
+		i++;
+	}
+	free_content(data, first_philo);
 	return (0);
 }
