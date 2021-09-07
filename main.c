@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/09/01 14:31:42 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/09/07 15:07:38 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ typedef	struct			s_philo
 	struct	s_philo		*prev;
 	int					last;
 	long long int		last_eat;
+	unsigned int		eat_nb;
 }						t_philo;
 
 
@@ -198,6 +199,9 @@ int		eat(t_philo *philo)
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
+	philo->eat_nb++;
+	if (philo->eat_nb == philo->data->time_each_philo_must_eat)
+		return (0);
 	return (1);
 }
 
@@ -382,6 +386,7 @@ void	init_philo(t_philo *philo, int id, t_data *data)
 	philo->sleeping = 0;
 	philo->thinking = 0;
 	philo->last_eat = 0;
+	philo->eat_nb = 0;
 }
 
 t_philo		*n_philo(t_philo *philo, int n)
