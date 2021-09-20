@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/09/07 15:07:38 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/09/20 15:03:08 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,9 @@ typedef struct			s_data
 	unsigned long long int		time_to_eat;
 	unsigned long long int		time_to_sleep;
 	unsigned long long int		time_each_philo_must_eat;
-	unsigned int				end;	
+	unsigned int				end;
 	int							*last_call;
+	unsigned int				all_satiate;
 }						t_data;
 
 typedef	struct			s_philo
@@ -48,6 +49,13 @@ typedef	struct			s_philo
 	unsigned int		eat_nb;
 }						t_philo;
 
+int					is_satiate(t_data *data)
+{
+	if (data->all_satiate)
+		return (1);
+	return (0);
+
+}
 
 long long int		get_prog_time(t_philo *philo)
 {
@@ -199,9 +207,8 @@ int		eat(t_philo *philo)
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
-	philo->eat_nb++;
 	if (philo->eat_nb == philo->data->time_each_philo_must_eat)
-		return (0);
+		philo->data->all_satiate++;
 	return (1);
 }
 
@@ -265,15 +272,15 @@ void	print_status(t_philo *philo)
 	printf("\n");
 }
 
-void	*test(void *data_philo)
+void	*routine(void *data_philo)
 {
 	t_philo				*philo;
-	int					died;
+	int					finished;
 	long long int		time;
 
 
 	philo = (t_philo*)data_philo;
-	died = 0;
+	finished = 0;
 	if (philo->data->nb_philo == 1)
 	{
 		time = get_prog_time(philo);
@@ -294,19 +301,17 @@ void	*test(void *data_philo)
 					update_eat_status(philo);
 					take_fork(philo);
 					if (!eat(philo))
-						died = 1;
-					break ;
+						finished = 1;
 				}
-
 				else
 					pthread_mutex_unlock(&philo->data->lock);
-				if (!is_dead(get_prog_time(philo), philo))
+				if (!is_dead(get_prog_time(philo), philo) && (philo->data->all_satiate == philo->data->nb_philo))
 				{
-					died = 1;
+					finished = 1;
 					break ;
 				}
 			}
-			if (died)
+			if (finished)
 				break ;
 			if (!rest(philo))
 				break ;
@@ -413,6 +418,7 @@ t_data		*init_data(long long int first_ts)
 	data->th = NULL;
 	data->last_call = NULL;
 	data->end = 0;
+	data->all_satiate = 0;
 	if (pthread_mutex_init(&(data->lock), NULL))
 		return (NULL);
 	return (data);
@@ -571,12 +577,12 @@ int	main(int argc, char **argv)
 	while  (first_philo->last != 1)
 	{
 		init_philo(first_philo, i, data);
-		pthread_create(&(data->th[i - 1]), NULL, &test, first_philo);
+		pthread_create(&(data->th[i - 1]), NULL, &routine, first_philo);
 		first_philo = first_philo->next;
 		i++;
 	}
 	init_philo(first_philo, i, data);
-	pthread_create(&(data->th[i - 1]), NULL, &test, first_philo);
+	pthread_create(&(data->th[i - 1]), NULL, &routine, first_philo);
 	first_philo = first_philo->next;
 	i = 0;
 	while (i < (int)data->nb_philo)
