@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/09/20 15:03:08 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/10/09 15:18:38 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ typedef struct			s_data
 	unsigned long long int		time_to_die;
 	unsigned long long int		time_to_eat;
 	unsigned long long int		time_to_sleep;
-	unsigned long long int		time_each_philo_must_eat;
+	long long int				time_each_philo_must_eat;
 	unsigned int				end;
 	int							*last_call;
 	unsigned int				all_satiate;
@@ -83,10 +83,10 @@ int	ft_usleep(unsigned long long int time, t_data *data)
 	start_t = get_current_ts();
 	while (slept_t < time)
 	{
-		if (!data->end)
+		if (!data->end && (data->all_satiate != data->nb_philo))
 			usleep(100);
 		else
-			return (0);
+				return (0);
 		current_t = get_current_ts();
 		slept_t = current_t - start_t;
 	}
@@ -207,6 +207,7 @@ int		eat(t_philo *philo)
 	philo->fork_r = 1;
 	philo->prev->fork_r = 1;
 	philo->next->fork_l = 1;
+	philo->eat_nb++;
 	if (philo->eat_nb == philo->data->time_each_philo_must_eat)
 		philo->data->all_satiate++;
 	return (1);
@@ -277,6 +278,7 @@ void	*routine(void *data_philo)
 	t_philo				*philo;
 	int					finished;
 	long long int		time;
+	int					eaten;
 
 
 	philo = (t_philo*)data_philo;
@@ -293,11 +295,25 @@ void	*routine(void *data_philo)
 	{
 		while (1)
 		{
+			eaten = 0;
 			while (1)
 			{
 				pthread_mutex_lock(&philo->data->lock);
+				/*
+					long long unsigned int		i;
+					i = 0;
+
+					while (i < philo->data->nb_philo)
+					{
+						printf("%d ", philo->data->last_call[i]);
+						if (i  == (philo->data->nb_philo - 1))
+							printf("|%d|\n", philo->id);
+						i++;
+					}
+					*/
 				if (philo->fork_l && philo->fork_r && can_eat(philo))
 				{
+					eaten = 1;
 					update_eat_status(philo);
 					take_fork(philo);
 					if (!eat(philo))
@@ -305,11 +321,13 @@ void	*routine(void *data_philo)
 				}
 				else
 					pthread_mutex_unlock(&philo->data->lock);
-				if (!is_dead(get_prog_time(philo), philo) && (philo->data->all_satiate == philo->data->nb_philo))
+				if (!is_dead(get_prog_time(philo), philo) || (philo->data->all_satiate == philo->data->nb_philo))
 				{
 					finished = 1;
 					break ;
 				}
+				if (eaten)
+					break ;
 			}
 			if (finished)
 				break ;
@@ -419,6 +437,7 @@ t_data		*init_data(long long int first_ts)
 	data->last_call = NULL;
 	data->end = 0;
 	data->all_satiate = 0;
+	data->time_each_philo_must_eat = -1;
 	if (pthread_mutex_init(&(data->lock), NULL))
 		return (NULL);
 	return (data);
