@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/10 17:03:04 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/12 10:20:18 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-
+int	count = 0;
 typedef struct			s_data
 {
 	pthread_t					*th;
@@ -131,14 +131,17 @@ void	take_fork(t_philo *philo)
 {
 	long long int		time;
 
+	printf("%d l: %d r: %d %p\n", count, philo->fork_l, philo->fork_r, philo);
 	time = get_prog_time(philo);
 	philo->fork_l = 0;
 	philo->fork_r = 0;
 	philo->prev->fork_r = 0;
 	philo->next->fork_l = 0;
+	printf("%p %p\n", philo->prev, philo->next);
 	pthread_mutex_unlock(&philo->data->lock);
 	if (!philo->data->end)
 	{
+		count++;
 		printf("%lld %d has taken a fork\n", time, philo->id);
 		printf("%lld %d has taken a fork\n", time, philo->id);
 	}
@@ -169,7 +172,6 @@ int		rest(t_philo *philo)
 
 int		is_dead(long long int time, t_philo *philo)
 {
-	//printf("time = %lld %lld\n", time, philo->last_eat);
 	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
 	{
 		if (!philo->data->end)
@@ -187,7 +189,6 @@ int		eat(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
-	printf("time %lld %d\n", time, philo->id);
 	philo->last_eat = time;
 	if (!philo->data->end)
 		printf("%lld %d is eating\n", time, philo->id);
@@ -313,10 +314,6 @@ void	*routine(void *data_philo)
 						i++;
 					}
 					*/
-				if (philo->id == 3)
-				{
-					printf("l: %d r: %d %d\n", philo->fork_l, philo->fork_r, can_eat(philo));
-				}
 				if (philo->fork_l && philo->fork_r && can_eat(philo))
 				{
 					eaten = 1;
