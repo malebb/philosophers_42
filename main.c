@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/10/09 15:18:38 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/10 17:03:04 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 		if (!philo->data->end)
 		{
 			philo->data->end = 1;
-			printf("%lld %d died\n", time, philo->id);
+			printf("%lld %d died1\n", time, philo->id);
 			return (0);
 		}
 		else
@@ -169,12 +169,13 @@ int		rest(t_philo *philo)
 
 int		is_dead(long long int time, t_philo *philo)
 {
+	//printf("time = %lld %lld\n", time, philo->last_eat);
 	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
 	{
 		if (!philo->data->end)
 		{
 			philo->data->end = 1;
-			printf("%lld %d died\n", time, philo->id);
+			printf("%lld %d died2 \n", time, philo->id);
 		}
 		return (0);
 	}
@@ -186,6 +187,7 @@ int		eat(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
+	printf("time %lld %d\n", time, philo->id);
 	philo->last_eat = time;
 	if (!philo->data->end)
 		printf("%lld %d is eating\n", time, philo->id);
@@ -194,7 +196,7 @@ int		eat(t_philo *philo)
 		if (!philo->data->end)
 		{
 			philo->data->end = 1;
-			printf("%lld %d died\n", time, philo->id);
+			printf("%lld %d died3\n", time, philo->id);
 		}
 		return (0);
 	}
@@ -289,7 +291,7 @@ void	*routine(void *data_philo)
 		printf("%lld %d has taken a fork\n", time, philo->id);
 		ft_usleep(philo->data->time_to_die, philo->data);
 		time = get_prog_time(philo);
-		printf("%lld %d died\n", time, philo->id);
+		printf("%lld %d died4\n", time, philo->id);
 	}
 	else
 	{
@@ -311,6 +313,10 @@ void	*routine(void *data_philo)
 						i++;
 					}
 					*/
+				if (philo->id == 3)
+				{
+					printf("l: %d r: %d %d\n", philo->fork_l, philo->fork_r, can_eat(philo));
+				}
 				if (philo->fork_l && philo->fork_r && can_eat(philo))
 				{
 					eaten = 1;
