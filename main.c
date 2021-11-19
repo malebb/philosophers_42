@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/19 11:14:21 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/19 15:52:16 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 typedef struct			s_data
 {
 	pthread_t					*th;
+	pthread_t					checker;
 	pthread_mutex_t				*forks;
 	long long int				first_ts;
 	int							eaten_id;
@@ -152,6 +153,8 @@ int		eat(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
+	if (time > 20000)
+		printf("%lld\n", time);
 	philo->last_eat = time;
 	if (!philo->data->end)
 		printf("%lld %d is eating\n", time, philo->id);
@@ -189,11 +192,8 @@ int		is_dead(long long int time, t_philo *philo)
 {
 	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
 	{
-		if (!philo->data->end)
-		{
-			philo->data->end = 1;
-			printf("%lld %d died2 \n", time, philo->id);
-		}
+		printf("time = %lld last_eat = %lld", time, philo->last_eat);
+		printf("%lld %d dieddd\n", time, philo->id);
 		return (0);
 	}
 	return (1);
@@ -258,30 +258,59 @@ void	print_status(t_philo *philo)
 	printf("\n");
 }
 
+void	*checker(void *data)
+{
+	t_philo		**philos;
+	int		i;
+	long long int	time;
+	int		end;
+
+	philos = (t_philo**)data;
+	end = 0;
+	while (!end)
+	{
+		i = 0;
+		while (i < philos[0]->data->nb_philo)
+		{
+			time = get_prog_time(philos[i]);
+			if (!is_dead(time, philos[i]))
+			{
+				philos[i]->data->end = 1;
+				end = 1; 
+				break ;
+			}
+			i++;
+		}
+	}
+	return (NULL);
+}
+
 void	*routine(void *data)
 {
 	t_philo				*philo;
 	long long int		time;
 
 	philo = (t_philo*)data;
-	printf("ID = %d\n", philo->id);
-	if (philo->data->nb_philo == 1)
+	while (!philo->data->end)
 	{
-		time = get_prog_time(philo);
-		printf("%lld %d has taken a fork\n", time, philo->id);
-		ft_usleep(philo->data->time_to_die, philo->data);
-		time = get_prog_time(philo);
-		printf("%lld %d died4\n", time, philo->id);
-	}
-	else
-	{
-		take_fork(philo);
-	//	eat(philo);
-		usleep(1000000);
-
-		pthread_mutex_unlock(philo->r_fork);
-		pthread_mutex_unlock(philo->l_fork);
-	//	rest(philo);
+		if (philo->data->nb_philo == 1)
+		{
+			time = get_prog_time(philo);
+			printf("%lld %d has taken a fork\n", time, philo->id);
+			ft_usleep(philo->data->time_to_die, philo->data);
+			time = get_prog_time(philo);
+			printf("%lld %d died4\n", time, philo->id);
+		}
+		else
+		{
+			take_fork(philo);
+			eat(philo);
+			pthread_mutex_unlock(philo->r_fork);
+			pthread_mutex_unlock(philo->l_fork);
+			rest(philo);
+			//		usleep(1000000);
+			//	rest(philo);
+		}
 	}
 	return (NULL);
 }
@@ -475,6 +504,7 @@ int	main(int argc, char **argv)
 		}
 		i++;
 	}
+	pthread_create(&data->checker, NULL, &checker, philos);
 	i = 0;
 	while  (i < data->nb_philo)
 	{
@@ -488,6 +518,7 @@ int	main(int argc, char **argv)
 		pthread_join(data->th[i], NULL);
 		i++;
 	}
+	pthread_join(data->checker, NULL);
 	free_content(data, philos);
 	return (0);
 }
