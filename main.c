@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/15 16:11:57 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/18 16:47:15 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 typedef struct			s_data
 {
 	pthread_t					*th;
+	pthread_mutex_t				*forks;
 	long long int				first_ts;
 	int							eaten_id;
 	int							nb_philo;
@@ -36,13 +37,14 @@ typedef struct			s_data
 typedef	struct			s_philo
 {
 	t_data				*data;
-	pthread_mutex_t		r_fork;
-	pthread_mutex_t		l_fork;
+	pthread_mutex_t		*l_fork;
+	pthread_mutex_t		*r_fork;
 	int 				id;
 	int					sleeping;
 	int					thinking;
 	long long int		last_eat;
 	unsigned int		eat_nb;
+
 }						t_philo;
 
 int					is_satiate(t_data *data)
@@ -128,14 +130,37 @@ void	take_fork(t_philo *philo)
 {
 	long long int		time;
 
+	if ((philo->id % 2) == 0)
+	{
+		pthread_mutex_lock(philo->l_fork);
+		pthread_mutex_lock(philo->r_fork);
+	}
+	else
+	{
+		pthread_mutex_lock(philo->r_fork);
+		pthread_mutex_lock(philo->l_fork);
+	}
 	time = get_prog_time(philo);
-	pthread_mutex_lock(&philo->l_fork);
-	pthread_mutex_lock(&philo->r_fork);
 	if (!philo->data->end)
 	{
 		printf("%lld %d has taken a fork\n", time, philo->id);
 		printf("%lld %d has taken a fork\n", time, philo->id);
 	}
+}
+
+int		eat(t_philo *philo)
+{
+	long long int		time;
+
+	time = get_prog_time(philo);
+	philo->last_eat = time;
+	if (!philo->data->end)
+		printf("%lld %d is eating\n", time, philo->id);
+	else
+		return (0);
+	if (!practice_activity(philo, time, philo->data->time_to_eat))
+		return (0);
+	return (1);
 }
 
 void	think(t_philo *philo)
@@ -238,12 +263,9 @@ void	print_status(t_philo *philo)
 void	*routine(void *data)
 {
 	t_philo				*philo;
-	int					finished;
 	long long int		time;
 
-
 	philo = (t_philo*)data;
-	finished = 0;
 	if (philo->data->nb_philo == 1)
 	{
 		time = get_prog_time(philo);
@@ -255,18 +277,26 @@ void	*routine(void *data)
 	else
 	{
 		take_fork(philo);
+		eat(philo);
+		rest(philo);
+		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(philo->l_fork);
 	}
 	return (NULL);
 }
 
-void	init_philo(t_philo *philo, int id, t_data *data)
+void	init_philo(t_philo **philo, int id, t_data *data)
 {
-	philo->data = data;
-	philo->id = id + 1;
-	philo->sleeping = 0;
-	philo->thinking = 0;
-	philo->last_eat = 0;
-	philo->eat_nb = 0;
+	*philo = malloc(sizeof(t_philo) * 1);
+	if (!philo)
+		return ;
+
+	(*philo)->data = data;
+	(*philo)->id = id + 1;
+	(*philo)->sleeping = 0;
+	(*philo)->thinking = 0;
+	(*philo)->last_eat = 0;
+	(*philo)->eat_nb = 0;
 }
 
 t_data		*init_data(long long int first_ts)
@@ -392,12 +422,11 @@ int	main(int argc, char **argv)
 	long long int		first_ts;
 	t_philo				**philos;
 	t_data				*data;
-	
+
 	(void)argc;
 	(void)argv;
 	gettimeofday(&tp, NULL);
 	first_ts = tp.tv_sec * 1000 + (tp.tv_usec / 1000);
-	printf("FIRST_TS%lld\n", first_ts);
 	if (argc < 5 || argc > 6)
 	{
 		printf("Error arguments: NUMBER_OF_PHILOSOPHERS TIME_TO_DIE TIME_TO_EAT TIME_TO_SLEEP [NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT]\n");
@@ -416,30 +445,40 @@ int	main(int argc, char **argv)
 		free_data(data);
 		return (1);
 	}
-	philos = malloc(sizeof(t_philo) * data->nb_philo);
+	data->forks = malloc((sizeof(pthread_mutex_t) * data->nb_philo));
+	philos = malloc((sizeof(t_philo *) * data->nb_philo));
 	if (!philos)
 		return (0);
 	i = 0;
 	while  (i < data->nb_philo)
 	{
-		init_philo(philos[i], i, data);
-		pthread_create(&(data->th[i]), NULL, &routine, philos);
+		init_philo(&(philos[i]), i, data);
+	
 		if (i == 0)
 		{
-			pthread_mutex_init(&(philos[i]->l_fork), NULL);
-			pthread_mutex_init(&(philos[i]->r_fork), NULL);
+			pthread_mutex_init(&philos[i]->data->forks[data->nb_philo - 1], NULL);
+			philos[i]->l_fork = &philos[i]->data->forks[data->nb_philo - 1];
+			pthread_mutex_init(&philos[i]->data->forks[i], NULL);
+			philos[i]->r_fork = &philos[i]->data->forks[i];
 		}
 		else if (i == (data->nb_philo - 1))
 		{
 			philos[i]->l_fork = philos[i - 1]->r_fork;
 			philos[i]->r_fork = philos[0]->l_fork;
-			
 		}
 		else
 		{
 			philos[i]->l_fork = philos[i - 1]->r_fork;
-			pthread_mutex_init(&(philos[i]->r_fork), NULL);
+			pthread_mutex_init(&philos[i]->data->forks[i], NULL);
+			philos[i]->r_fork = &philos[i]->data->forks[i];
 		}
+		
+		i++;
+	}
+	i = 0;
+	while  (i < data->nb_philo)
+	{
+		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
 		i++;
 	}
 	i = 0;
