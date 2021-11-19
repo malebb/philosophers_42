@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/19 10:22:29 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/19 11:14:21 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -230,7 +230,6 @@ int	can_eat(t_philo *philo)
 	}
 	return (1);
 }
-
 void	update_eat_status(t_philo *philo)
 {
 	int		i;
@@ -265,6 +264,7 @@ void	*routine(void *data)
 	long long int		time;
 
 	philo = (t_philo*)data;
+	printf("ID = %d\n", philo->id);
 	if (philo->data->nb_philo == 1)
 	{
 		time = get_prog_time(philo);
@@ -276,10 +276,12 @@ void	*routine(void *data)
 	else
 	{
 		take_fork(philo);
-		eat(philo);
+	//	eat(philo);
+		usleep(1000000);
+
 		pthread_mutex_unlock(philo->r_fork);
 		pthread_mutex_unlock(philo->l_fork);
-		rest(philo);
+	//	rest(philo);
 	}
 	return (NULL);
 }
@@ -471,13 +473,13 @@ int	main(int argc, char **argv)
 			pthread_mutex_init(&philos[i]->data->forks[i], NULL);
 			philos[i]->r_fork = &philos[i]->data->forks[i];
 		}
-		
 		i++;
 	}
 	i = 0;
 	while  (i < data->nb_philo)
 	{
 		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
+		usleep(100);
 		i++;
 	}
 	i = 0;
