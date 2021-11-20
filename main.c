@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/20 09:43:35 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/20 14:06:19 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
+#define KRED  "\x1B[31m"
+#define KWHT  "\x1B[37m"
 
 typedef struct			s_data
 {
@@ -99,14 +101,14 @@ unsigned int		is_finished(t_philo *philo)
 	return (0);
 }
 
-int		practice_activity(t_philo *philo, long long int time, long long int time_to)
+int		practice_activity(t_philo *philo, long long int time_to)
 {
-	long long int		time_exceed;
+//	long long int		time_exceed;
 
-	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
-	{
-		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
-		if (!ft_usleep(time_to - time_exceed, philo->data))
+//	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
+//	{
+//		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
+/*		if (!ft_usleep(time_to - time_exceed, philo->data))
 			return (0);
 		time = get_prog_time(philo);
 		if (!philo->data->end)
@@ -117,12 +119,13 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 		}
 		else
 			return (0);
-	}
-	else
-	{
-		if (!ft_usleep(time_to, philo->data))
-			return (0);
-	}
+			*/
+//	}
+//	else
+//	{
+	if (!ft_usleep(time_to, philo->data))
+		return (0);
+//	}
 	return (1);
 }
 
@@ -131,18 +134,19 @@ void	take_fork(t_philo *philo)
 	if ((philo->id % 2) == 0)
 	{
 		pthread_mutex_lock(philo->l_fork);
+		if (!philo->data->end)
+			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 		pthread_mutex_lock(philo->r_fork);
 	}
 	else
 	{
 		pthread_mutex_lock(philo->r_fork);
+		if (!philo->data->end)
+			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 		pthread_mutex_lock(philo->l_fork);
 	}
 	if (!philo->data->end)
-	{
 		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-	}
 }
 
 int		eat(t_philo *philo)
@@ -152,10 +156,10 @@ int		eat(t_philo *philo)
 	time = get_prog_time(philo);
 	philo->last_eat = time;
 	if (!philo->data->end)
-		printf("%lld %d is eating\n", time, philo->id);
+		printf("%s%lld %d is eating%s\n", KRED, time, philo->id, KWHT);
 	else
 		return (0);
-	if (!practice_activity(philo, time, philo->data->time_to_eat))
+	if (!practice_activity(philo, philo->data->time_to_eat))
 		return (0);
 	return (1);
 }
@@ -175,7 +179,7 @@ int		rest(t_philo *philo)
 		printf("%lld %d is sleeping\n", time, philo->id);
 	else
 		return (0);
-	if (!practice_activity(philo, time, philo->data->time_to_sleep))
+	if (!practice_activity(philo, philo->data->time_to_sleep))
 		return (0);
 	return (1);
 }
@@ -183,11 +187,7 @@ int		rest(t_philo *philo)
 int		is_dead(long long int time, t_philo *philo)
 {
 	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
-	{
-		printf("time = %lld last_eat = %lld\n", time, philo->last_eat);
-		printf("%lld %d dieddd\n", time, philo->id);
 		return (0);
-	}
 	return (1);
 }
 
@@ -269,6 +269,7 @@ void	*checker(void *data)
 			{
 				philos[i]->data->end = 1;
 				end = 1; 
+				printf("%lld %d dieddd\n", time, philos[i]->id);
 				break ;
 			}
 			i++;
@@ -290,11 +291,10 @@ void	*routine(void *data)
 			time = get_prog_time(philo);
 			printf("%lld %d has taken a fork\n", time, philo->id);
 			ft_usleep(philo->data->time_to_die, philo->data);
-			time = get_prog_time(philo);
-			printf("%lld %d died4\n", time, philo->id);
 		}
 		else
 		{
+			think(philo);
 			take_fork(philo);
 			eat(philo);
 			pthread_mutex_unlock(philo->r_fork);
@@ -501,7 +501,7 @@ int	main(int argc, char **argv)
 	while  (i < data->nb_philo)
 	{
 		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
-		usleep(100);
+		usleep(500);
 		i++;
 	}
 	i = 0;
