@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/19 15:52:16 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/20 09:43:35 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,8 +128,6 @@ int		practice_activity(t_philo *philo, long long int time, long long int time_to
 
 void	take_fork(t_philo *philo)
 {
-	long long int		time;
-
 	if ((philo->id % 2) == 0)
 	{
 		pthread_mutex_lock(philo->l_fork);
@@ -140,11 +138,10 @@ void	take_fork(t_philo *philo)
 		pthread_mutex_lock(philo->r_fork);
 		pthread_mutex_lock(philo->l_fork);
 	}
-	time = get_prog_time(philo);
 	if (!philo->data->end)
 	{
-		printf("%lld %d has taken a fork\n", time, philo->id);
-		printf("%lld %d has taken a fork\n", time, philo->id);
+		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
+		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 	}
 }
 
@@ -153,8 +150,6 @@ int		eat(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
-	if (time > 20000)
-		printf("%lld\n", time);
 	philo->last_eat = time;
 	if (!philo->data->end)
 		printf("%lld %d is eating\n", time, philo->id);
@@ -167,11 +162,8 @@ int		eat(t_philo *philo)
 
 void	think(t_philo *philo)
 {
-	long long int		time;
-
-	time = get_prog_time(philo);
 	if (!philo->data->end)
-		printf("%lld %d is thinking\n", time, philo->id);
+		printf("%lld %d is thinking\n", get_prog_time(philo), philo->id);
 } 
 
 int		rest(t_philo *philo)
@@ -192,7 +184,7 @@ int		is_dead(long long int time, t_philo *philo)
 {
 	if ((time - philo->last_eat) > (long long)philo->data->time_to_die)
 	{
-		printf("time = %lld last_eat = %lld", time, philo->last_eat);
+		printf("time = %lld last_eat = %lld\n", time, philo->last_eat);
 		printf("%lld %d dieddd\n", time, philo->id);
 		return (0);
 	}
