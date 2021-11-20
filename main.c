@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/20 14:06:19 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/20 16:45:04 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -501,7 +501,6 @@ int	main(int argc, char **argv)
 	while  (i < data->nb_philo)
 	{
 		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
-		usleep(500);
 		i++;
 	}
 	i = 0;
