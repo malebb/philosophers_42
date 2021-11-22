@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/20 16:45:04 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/22 14:27:13 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ typedef struct			s_data
 	pthread_mutex_t				*forks;
 	long long int				first_ts;
 	int							eaten_id;
-	int							nb_philo;
+	unsigned int				nb_philo;
 	unsigned long long int		time_to_die;
 	unsigned long long int		time_to_eat;
 	unsigned long long int		time_to_sleep;
@@ -49,12 +49,11 @@ typedef	struct			s_philo
 
 }						t_philo;
 
-int					is_satiate(t_data *data)
+unsigned int		is_satiate(t_data *data)
 {
-	if (data->all_satiate)
+	if (data->all_satiate >= data->nb_philo)
 		return (1);
 	return (0);
-
 }
 
 long long int		get_prog_time(t_philo *philo)
@@ -84,7 +83,7 @@ int	ft_usleep(unsigned long long int time, t_data *data)
 	start_t = get_current_ts();
 	while (slept_t < time)
 	{
-		if (!data->end)
+		if (!data->end && !is_satiate(data))
 			usleep(10);
 		else
 				return (0);
@@ -94,38 +93,10 @@ int	ft_usleep(unsigned long long int time, t_data *data)
 	return (1);
 }
 
-unsigned int		is_finished(t_philo *philo)
-{
-	if (philo->data->end)
-		return (1);
-	return (0);
-}
-
 int		practice_activity(t_philo *philo, long long int time_to)
 {
-//	long long int		time_exceed;
-
-//	if (time_to + (time - philo->last_eat) >= (long long)philo->data->time_to_die)
-//	{
-//		time_exceed = (time + (time_to - philo->last_eat)) - philo->data->time_to_die;
-/*		if (!ft_usleep(time_to - time_exceed, philo->data))
-			return (0);
-		time = get_prog_time(philo);
-		if (!philo->data->end)
-		{
-			philo->data->end = 1;
-			printf("%lld %d died1\n", time, philo->id);
-			return (0);
-		}
-		else
-			return (0);
-			*/
-//	}
-//	else
-//	{
 	if (!ft_usleep(time_to, philo->data))
 		return (0);
-//	}
 	return (1);
 }
 
@@ -134,18 +105,18 @@ void	take_fork(t_philo *philo)
 	if ((philo->id % 2) == 0)
 	{
 		pthread_mutex_lock(philo->l_fork);
-		if (!philo->data->end)
+		if (!philo->data->end && !is_satiate(philo->data))
 			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 		pthread_mutex_lock(philo->r_fork);
 	}
 	else
 	{
 		pthread_mutex_lock(philo->r_fork);
-		if (!philo->data->end)
+		if (!philo->data->end && !is_satiate(philo->data))
 			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 		pthread_mutex_lock(philo->l_fork);
 	}
-	if (!philo->data->end)
+	if (!philo->data->end && !is_satiate(philo->data))
 		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
 }
 
@@ -155,8 +126,13 @@ int		eat(t_philo *philo)
 
 	time = get_prog_time(philo);
 	philo->last_eat = time;
-	if (!philo->data->end)
+	if (!philo->data->end && !is_satiate(philo->data))
+	{
+		philo->eat_nb++;
+		if (philo->eat_nb == philo->data->time_each_philo_must_eat)
+			philo->data->all_satiate++;
 		printf("%s%lld %d is eating%s\n", KRED, time, philo->id, KWHT);
+	}
 	else
 		return (0);
 	if (!practice_activity(philo, philo->data->time_to_eat))
@@ -166,7 +142,7 @@ int		eat(t_philo *philo)
 
 void	think(t_philo *philo)
 {
-	if (!philo->data->end)
+	if (!philo->data->end && !is_satiate(philo->data))
 		printf("%lld %d is thinking\n", get_prog_time(philo), philo->id);
 } 
 
@@ -175,7 +151,7 @@ int		rest(t_philo *philo)
 	long long int		time;
 
 	time = get_prog_time(philo);
-	if (!philo->data->end)
+	if (!philo->data->end && !is_satiate(philo->data))
 		printf("%lld %d is sleeping\n", time, philo->id);
 	else
 		return (0);
@@ -239,7 +215,7 @@ void	update_eat_status(t_philo *philo)
 
 void	print_status(t_philo *philo)
 {
-	int			i;
+	unsigned int	i;
 
 	i = 0;
 	while (i < philo->data->nb_philo)
@@ -252,10 +228,10 @@ void	print_status(t_philo *philo)
 
 void	*checker(void *data)
 {
-	t_philo		**philos;
-	int		i;
-	long long int	time;
-	int		end;
+	t_philo				**philos;
+	unsigned int		i;
+	long long int		time;
+	int					end;
 
 	philos = (t_philo**)data;
 	end = 0;
@@ -269,7 +245,8 @@ void	*checker(void *data)
 			{
 				philos[i]->data->end = 1;
 				end = 1; 
-				printf("%lld %d dieddd\n", time, philos[i]->id);
+				if (!is_satiate(philos[i]->data))
+					printf("%lld %d dieddd\n", time, philos[i]->id);
 				break ;
 			}
 			i++;
@@ -281,18 +258,16 @@ void	*checker(void *data)
 void	*routine(void *data)
 {
 	t_philo				*philo;
-	long long int		time;
 
 	philo = (t_philo*)data;
-	while (!philo->data->end)
+	if (philo->data->nb_philo == 1)
 	{
-		if (philo->data->nb_philo == 1)
-		{
-			time = get_prog_time(philo);
-			printf("%lld %d has taken a fork\n", time, philo->id);
-			ft_usleep(philo->data->time_to_die, philo->data);
-		}
-		else
+		think(philo);
+		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
+	}
+	else
+	{
+		while (!philo->data->end && !is_satiate(philo->data))
 		{
 			think(philo);
 			take_fork(philo);
@@ -300,8 +275,6 @@ void	*routine(void *data)
 			pthread_mutex_unlock(philo->r_fork);
 			pthread_mutex_unlock(philo->l_fork);
 			rest(philo);
-			//		usleep(1000000);
-			//	rest(philo);
 		}
 	}
 	return (NULL);
@@ -312,7 +285,6 @@ void	init_philo(t_philo **philo, int id, t_data *data)
 	*philo = malloc(sizeof(t_philo) * 1);
 	if (!philo)
 		return ;
-
 	(*philo)->data = data;
 	(*philo)->id = id + 1;
 	(*philo)->sleeping = 0;
@@ -440,7 +412,7 @@ void	free_content(t_data *data, t_philo **philo)
 int	main(int argc, char **argv)
 {
 	
-	int					i;
+	unsigned int		i;
 	struct timeval		tp;
 	long long int		first_ts;
 	t_philo				**philos;
@@ -504,7 +476,7 @@ int	main(int argc, char **argv)
 		i++;
 	}
 	i = 0;
-	while (i < (int)data->nb_philo)
+	while (i < data->nb_philo)
 	{
 		pthread_join(data->th[i], NULL);
 		i++;
