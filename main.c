@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/22 14:27:13 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/23 11:12:53 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,16 +127,14 @@ int		eat(t_philo *philo)
 	time = get_prog_time(philo);
 	philo->last_eat = time;
 	if (!philo->data->end && !is_satiate(philo->data))
-	{
-		philo->eat_nb++;
-		if (philo->eat_nb == philo->data->time_each_philo_must_eat)
-			philo->data->all_satiate++;
 		printf("%s%lld %d is eating%s\n", KRED, time, philo->id, KWHT);
-	}
 	else
 		return (0);
 	if (!practice_activity(philo, philo->data->time_to_eat))
 		return (0);
+	philo->eat_nb++;
+	if (philo->eat_nb == philo->data->time_each_philo_must_eat)
+		philo->data->all_satiate++;
 	return (1);
 }
 
@@ -235,7 +233,7 @@ void	*checker(void *data)
 
 	philos = (t_philo**)data;
 	end = 0;
-	while (!end)
+	while (!end && !is_satiate(philos[0]->data))
 	{
 		i = 0;
 		while (i < philos[0]->data->nb_philo)
@@ -246,7 +244,7 @@ void	*checker(void *data)
 				philos[i]->data->end = 1;
 				end = 1; 
 				if (!is_satiate(philos[i]->data))
-					printf("%lld %d dieddd\n", time, philos[i]->id);
+					printf("%lld %d died\n", time, philos[i]->id);
 				break ;
 			}
 			i++;
