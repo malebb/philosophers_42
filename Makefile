@@ -6,11 +6,11 @@
 #    By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/17 19:40:00 by mlebrun           #+#    #+#              #
-#    Updated: 2021/09/20 15:23:29 by mlebrun          ###   ########.fr        #
+#    Updated: 2021/11/23 15:30:19 by mlebrun          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-SRCS = main.c
+SRCS = main.c clock.c tasks.c
 
 OBJS = ${SRCS:.c=.o}
 
@@ -35,3 +35,5 @@ fclean:		clean
 			${RM} ${NAME}
 
 re:			fclean all
+
+.PHONY:		all clean fclean re

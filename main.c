@@ -6,156 +6,19 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/23 11:12:53 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/23 15:48:22 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
-#define KRED  "\x1B[31m"
-#define KWHT  "\x1B[37m"
-
-typedef struct			s_data
-{
-	pthread_t					*th;
-	pthread_t					checker;
-	pthread_mutex_t				*forks;
-	long long int				first_ts;
-	int							eaten_id;
-	unsigned int				nb_philo;
-	unsigned long long int		time_to_die;
-	unsigned long long int		time_to_eat;
-	unsigned long long int		time_to_sleep;
-	long long int				time_each_philo_must_eat;
-	unsigned int				end;
-	int							*last_call;
-	unsigned int				all_satiate;
-}						t_data;
-
-typedef	struct			s_philo
-{
-	t_data				*data;
-	pthread_mutex_t		*l_fork;
-	pthread_mutex_t		*r_fork;
-	int 				id;
-	int					sleeping;
-	int					thinking;
-	long long int		last_eat;
-	unsigned int		eat_nb;
-
-}						t_philo;
+#include "philosophers.h"
+#include "clock.h"
+#include "tasks.h"
 
 unsigned int		is_satiate(t_data *data)
 {
 	if (data->all_satiate >= data->nb_philo)
 		return (1);
 	return (0);
-}
-
-long long int		get_prog_time(t_philo *philo)
-{
-	struct timeval		tp;
-
-	gettimeofday(&tp, NULL);
-	return ((tp.tv_sec * 1000 + (tp.tv_usec / 1000) - philo->data->first_ts));
-}
-
-unsigned long long int		get_current_ts(void)
-{
-
-	struct timeval		tp;
-
-	gettimeofday(&tp, NULL);
-	return ((tp.tv_sec * 1000 + tp.tv_usec / 1000));
-}
-
-int	ft_usleep(unsigned long long int time, t_data *data)
-{
-	unsigned long long int		slept_t;
-	unsigned long long int		start_t;
-	unsigned long long int		current_t;
-
-	slept_t = 0;
-	start_t = get_current_ts();
-	while (slept_t < time)
-	{
-		if (!data->end && !is_satiate(data))
-			usleep(10);
-		else
-				return (0);
-		current_t = get_current_ts();
-		slept_t = current_t - start_t;
-	}
-	return (1);
-}
-
-int		practice_activity(t_philo *philo, long long int time_to)
-{
-	if (!ft_usleep(time_to, philo->data))
-		return (0);
-	return (1);
-}
-
-void	take_fork(t_philo *philo)
-{
-	if ((philo->id % 2) == 0)
-	{
-		pthread_mutex_lock(philo->l_fork);
-		if (!philo->data->end && !is_satiate(philo->data))
-			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-		pthread_mutex_lock(philo->r_fork);
-	}
-	else
-	{
-		pthread_mutex_lock(philo->r_fork);
-		if (!philo->data->end && !is_satiate(philo->data))
-			printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-		pthread_mutex_lock(philo->l_fork);
-	}
-	if (!philo->data->end && !is_satiate(philo->data))
-		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-}
-
-int		eat(t_philo *philo)
-{
-	long long int		time;
-
-	time = get_prog_time(philo);
-	philo->last_eat = time;
-	if (!philo->data->end && !is_satiate(philo->data))
-		printf("%s%lld %d is eating%s\n", KRED, time, philo->id, KWHT);
-	else
-		return (0);
-	if (!practice_activity(philo, philo->data->time_to_eat))
-		return (0);
-	philo->eat_nb++;
-	if (philo->eat_nb == philo->data->time_each_philo_must_eat)
-		philo->data->all_satiate++;
-	return (1);
-}
-
-void	think(t_philo *philo)
-{
-	if (!philo->data->end && !is_satiate(philo->data))
-		printf("%lld %d is thinking\n", get_prog_time(philo), philo->id);
-} 
-
-int		rest(t_philo *philo)
-{
-	long long int		time;
-
-	time = get_prog_time(philo);
-	if (!philo->data->end && !is_satiate(philo->data))
-		printf("%lld %d is sleeping\n", time, philo->id);
-	else
-		return (0);
-	if (!practice_activity(philo, philo->data->time_to_sleep))
-		return (0);
-	return (1);
 }
 
 int		is_dead(long long int time, t_philo *philo)
@@ -179,49 +42,6 @@ int		init_last_call(int **last_call, unsigned int nb_philo)
 		i++;
 	}
 	return (1);
-}
-
-int	can_eat(t_philo *philo)
-{
-	int		i;
-
-	i = philo->data->nb_philo - 1;
-	while (i >= 0)
-	{
-		if (i != 0 && philo->data->last_call[i] == philo->id && philo->data->last_call[i - 1] == -1)
-			return (0);
-		else if ((i == 0 && philo->data->last_call[i] == philo->id) || (philo->data->last_call[i] != philo->id && i != 0 && philo->data->last_call[i - 1] == -1))
-			return (1);
-		i--;
-	}
-	return (1);
-}
-void	update_eat_status(t_philo *philo)
-{
-	int		i;
-
-	i = 0;
-	while (i < (int)philo->data->nb_philo)
-	{
-		if (i != (int)philo->data->nb_philo - 1)
-			philo->data->last_call[i] = philo->data->last_call[i + 1];
-		else
-			philo->data->last_call[i] = philo->id;
-		i++;
-	}
-}
-
-void	print_status(t_philo *philo)
-{
-	unsigned int	i;
-
-	i = 0;
-	while (i < philo->data->nb_philo)
-	{
-		printf("%d ", philo->data->last_call[i]);
-		i++;
-	}
-	printf("\n");
 }
 
 void	*checker(void *data)
@@ -285,8 +105,6 @@ void	init_philo(t_philo **philo, int id, t_data *data)
 		return ;
 	(*philo)->data = data;
 	(*philo)->id = id + 1;
-	(*philo)->sleeping = 0;
-	(*philo)->thinking = 0;
 	(*philo)->last_eat = 0;
 	(*philo)->eat_nb = 0;
 }
@@ -407,6 +225,43 @@ void	free_content(t_data *data, t_philo **philo)
 	free_data(data);
 }
 
+int		init_mutexes(t_philo **philos, t_data *data, unsigned int i)
+{
+	if (i == 0)
+	{
+		pthread_mutex_init(&philos[i]->data->forks[data->nb_philo - 1], NULL);
+		philos[i]->l_fork = &philos[i]->data->forks[data->nb_philo - 1];
+		pthread_mutex_init(&philos[i]->data->forks[i], NULL);
+		philos[i]->r_fork = &philos[i]->data->forks[i];
+	}
+	else if (i == (data->nb_philo - 1))
+	{
+		philos[i]->l_fork = philos[i - 1]->r_fork;
+		philos[i]->r_fork = philos[0]->l_fork;
+	}
+	else
+	{
+		philos[i]->l_fork = philos[i - 1]->r_fork;
+		pthread_mutex_init(&philos[i]->data->forks[i], NULL);
+		philos[i]->r_fork = &philos[i]->data->forks[i];
+	}
+	return (1);
+}
+
+unsigned int	create_threads(t_philo **philos, t_data *data)
+{
+	unsigned int	i;
+
+	pthread_create(&data->checker, NULL, &checker, philos);
+	i = 0;
+	while  (i < data->nb_philo)
+	{
+		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
+		i++;
+	}
+	return (1);
+}
+
 int	main(int argc, char **argv)
 {
 	
@@ -416,8 +271,6 @@ int	main(int argc, char **argv)
 	t_philo				**philos;
 	t_data				*data;
 
-	(void)argc;
-	(void)argv;
 	gettimeofday(&tp, NULL);
 	first_ts = tp.tv_sec * 1000 + (tp.tv_usec / 1000);
 	if (argc < 5 || argc > 6)
@@ -446,33 +299,10 @@ int	main(int argc, char **argv)
 	while  (i < data->nb_philo)
 	{
 		init_philo(&(philos[i]), i, data);
-		if (i == 0)
-		{
-			pthread_mutex_init(&philos[i]->data->forks[data->nb_philo - 1], NULL);
-			philos[i]->l_fork = &philos[i]->data->forks[data->nb_philo - 1];
-			pthread_mutex_init(&philos[i]->data->forks[i], NULL);
-			philos[i]->r_fork = &philos[i]->data->forks[i];
-		}
-		else if (i == (data->nb_philo - 1))
-		{
-			philos[i]->l_fork = philos[i - 1]->r_fork;
-			philos[i]->r_fork = philos[0]->l_fork;
-		}
-		else
-		{
-			philos[i]->l_fork = philos[i - 1]->r_fork;
-			pthread_mutex_init(&philos[i]->data->forks[i], NULL);
-			philos[i]->r_fork = &philos[i]->data->forks[i];
-		}
+		init_mutexes(philos, data, i);
 		i++;
 	}
-	pthread_create(&data->checker, NULL, &checker, philos);
-	i = 0;
-	while  (i < data->nb_philo)
-	{
-		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
-		i++;
-	}
+	create_threads(philos, data);
 	i = 0;
 	while (i < data->nb_philo)
 	{
