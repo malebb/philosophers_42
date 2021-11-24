@@ -3,24 +3,25 @@
 /*                                                        :::      ::::::::   */
 /*   init.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mlebrun <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/11/24 08:59:55 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 09:26:17 by mlebrun          ###   ########.fr       */
+/*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
+/*   Updated: 2021/11/24 15:50:57 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "init.h"
 
-void	init_philo(t_philo **philo, int id, t_data *data)
+unsigned int	init_philo(t_philo **philo, int id, t_data *data)
 {
 	*philo = malloc(sizeof(t_philo) * 1);
 	if (!philo)
-		return ;
+		return (0);
 	(*philo)->data = data;
 	(*philo)->id = id + 1;
 	(*philo)->last_eat = 0;
 	(*philo)->eat_nb = 0;
+	return (1);
 }
 
 t_data	*init_data(long long int first_ts)
@@ -38,7 +39,8 @@ t_data	*init_data(long long int first_ts)
 	data->time_each_philo_must_eat = -1;
 	return (data);
 }
-unsigned int	init_mutexes(t_philo **philos, t_data *data, unsigned int i)
+
+void	init_mutexes(t_philo **philos, t_data *data, unsigned int i)
 {
 	if (i == 0)
 	{
@@ -58,19 +60,17 @@ unsigned int	init_mutexes(t_philo **philos, t_data *data, unsigned int i)
 		pthread_mutex_init(&philos[i]->data->forks[i], NULL);
 		philos[i]->r_fork = &philos[i]->data->forks[i];
 	}
-	return (1);
 }
 
-unsigned int	create_threads(t_philo **philos, t_data *data)
+void	create_threads(t_philo **philos, t_data *data)
 {
 	unsigned int	i;
 
 	pthread_create(&data->checker, NULL, &checker, philos);
 	i = 0;
-	while  (i < data->nb_philo)
+	while (i < data->nb_philo)
 	{
 		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
 		i++;
 	}
-	return (1);
 }

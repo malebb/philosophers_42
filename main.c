@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 09:23:27 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/24 16:05:30 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,14 @@
 #include "tasks.h"
 #include "init.h"
 
-unsigned int		is_satiate(t_data *data)
+unsigned int	is_satiate(t_data *data)
 {
 	if (data->all_satiate >= data->nb_philo)
 		return (1);
 	return (0);
 }
 
-int		init_last_call(int **last_call, unsigned int nb_philo)
+int	init_last_call(int **last_call, unsigned int nb_philo)
 {
 	unsigned int	i;
 
@@ -38,11 +38,10 @@ int		init_last_call(int **last_call, unsigned int nb_philo)
 	return (1);
 }
 
-
-unsigned long long int ft_atoi(char *nb)
+unsigned long long int	ft_atoi(char *nb)
 {
-	unsigned long long int		nbr;
-	int				i;
+	unsigned long long int	nbr;
+	int						i;
 
 	i = 0;
 	nbr = 0;
@@ -55,21 +54,24 @@ unsigned long long int ft_atoi(char *nb)
 	return (nbr);
 }
 
-int		is_digit(char c)
+int	is_digit(char c)
 {
 	if (c >= '0' && c <= '9')
 		return (1);
 	return (0);
 }
 
-int		is_positive_number(char *argv, int index)
+int	is_positive_number(char *argv, int index)
 {
 	int		i;
 
 	i = 0;
 	while (argv[i] != '\0')
 	{
-		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' && i != 0) || (argv[i] == '-' && argv[i + 1] == '\0') || (i == 0  && argv[i] == '0') || (i == 1 && argv[0] == '-' && argv[i] == '0'))
+		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' &&
+		i != 0) || (argv[i] == '-' && argv[i + 1] == '\0') ||
+		(i == 0  && argv[i] == '0') || (i == 1 && argv[0] == '-' &&
+		argv[i] == '0'))
 		{
 			if (index == 1)
 				printf("Error: NB_OF_PHILO is invalid\n");
@@ -156,6 +158,8 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	data = init_data(first_ts);
+	if (!data)
+		return (1);
 	if (!parse_arg(argv, argc, data))
 	{
 		free_data(data);
@@ -169,13 +173,16 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	data->forks = malloc((sizeof(pthread_mutex_t) * data->nb_philo));
+	if (!data->forks)
+		return (1);
 	philos = malloc((sizeof(t_philo *) * data->nb_philo));
 	if (!philos)
-		return (0);
+		return (1);
 	i = 0;
 	while  (i < data->nb_philo)
 	{
-		init_philo(&(philos[i]), i, data);
+		if (!init_philo(&(philos[i]), i, data))
+			return (-1);
 		init_mutexes(philos, data, i);
 		i++;
 	}
