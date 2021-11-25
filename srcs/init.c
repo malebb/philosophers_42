@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 13:45:21 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 15:58:33 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ MUST_EAT]\n");
 	return (data);
 }
 
-void	init_mutexes(t_philo **philos, t_data *data, unsigned int i)
+void	init_fork_mutexes(t_philo **philos, t_data *data, unsigned int i)
 {
 	if (i == 0)
 	{
@@ -108,8 +108,9 @@ t_philo	**init_data_philo(t_data *data)
 	{
 		if (!init_philo(&(philos[i]), i, data))
 			return (0);
-		init_mutexes(philos, data, i);
+		init_fork_mutexes(philos, data, i);
 		i++;
 	}
+	pthread_mutex_init(&data->end_lock, NULL);
 	return (philos);
 }

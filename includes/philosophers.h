@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 13:24:33 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 13:58:46 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 15:33:02 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ typedef struct s_data
 	pthread_t					*th;
 	pthread_t					checker;
 	pthread_mutex_t				*forks;
+	pthread_mutex_t				end_lock;
 	long long int				first_ts;
 	unsigned int				nb_philo;
 	unsigned long long int		time_to_die;
