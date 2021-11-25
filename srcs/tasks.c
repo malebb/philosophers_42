@@ -6,12 +6,27 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 15:09:53 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 22:33:08 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 22:52:35 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "tasks.h"
 #include "utils.h"
+
+unsigned int	practice_tasks(t_philo *philo)
+{
+	think(philo);
+	take_fork(philo);
+	eat(philo);
+	pthread_mutex_unlock(philo->r_fork);
+	pthread_mutex_unlock(philo->l_fork);
+	if (!rest(philo))
+	{
+		pthread_mutex_lock(&philo->data->end_lock);
+		return (0);
+	}
+	return (1);
+}
 
 void	take_fork(t_philo *philo)
 {
