@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 11:10:29 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 13:35:40 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,16 +24,23 @@ int	main(int argc, char **argv)
 	data = init_data(argc);
 	if (!data)
 		return (1);
+	philos = NULL;
 	if (!parse_arg(argv, argc, data))
 	{
-		free_data(data);
+		free_content(data, philos);
 		return (1);
 	}
 	philos = init_data_philo(data);
 	if (!philos)
+	{
+		free_content(data, philos);
 		return (1);
+	}
 	if (!init_threads(data, philos))
+	{
+		free_content(data, philos);
 		return (1);
+	}
 	free_content(data, philos);
 	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 09:13:50 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 10:11:06 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 13:47:21 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,7 @@ unsigned int	init_threads(t_data *data, t_philo **philos)
 
 	data->th = malloc(sizeof(pthread_t) * data->nb_philo);
 	if (!data->th)
-	{
-		free_data(data);
 		return (0);
-	}
 	create_threads(philos, data);
 	i = 0;
 	while (i < data->nb_philo)

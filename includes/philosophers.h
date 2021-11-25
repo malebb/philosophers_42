@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 13:24:33 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 13:23:24 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 13:20:50 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ typedef struct s_data
 	unsigned long long int		time_to_sleep;
 	long long int				time_each_philo_must_eat;
 	unsigned int				end;
-	int							*last_call;
 	unsigned int				all_satiate;
 }	t_data;
 

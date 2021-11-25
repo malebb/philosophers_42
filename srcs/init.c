@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 11:14:54 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 13:45:21 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,11 @@ MUST_EAT]\n");
 	if (!data)
 		return (NULL);
 	data->first_ts = first_ts;
-	data->th = NULL;
-	data->last_call = NULL;
 	data->end = 0;
 	data->all_satiate = 0;
 	data->time_each_philo_must_eat = -1;
+	data->forks = NULL;
+	data->th = NULL;
 	return (data);
 }
 
@@ -97,6 +97,12 @@ t_philo	**init_data_philo(t_data *data)
 	philos = malloc((sizeof(t_philo *) * data->nb_philo));
 	if (!philos)
 		return (0);
+	i = 0;
+	while (i < data->nb_philo)
+	{
+		philos[i] = NULL;
+		i++;
+	}
 	i = 0;
 	while (i < data->nb_philo)
 	{
