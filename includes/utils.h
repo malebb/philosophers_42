@@ -1,24 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   threads.h                                          :+:      :+:    :+:   */
+/*   utils.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/11/24 09:15:54 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 11:15:09 by mlebrun          ###   ########.fr       */
+/*   Created: 2021/11/25 11:04:14 by mlebrun           #+#    #+#             */
+/*   Updated: 2021/11/25 11:08:03 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef THREADS_H
-# define THREADS_H
+#ifndef UTILS_H
+# define UTILS_H
 # include "philosophers.h"
-# include "tasks.h"
-# include "free.h"
-# include "init.h"
 
-void			*routine(void *data);
-void			*checker(void *data);
-unsigned int	init_threads(t_data *data, t_philo **philos);
+unsigned int				is_satiate(t_data *data);
+unsigned long long int		ft_atoi(char *nb);
+unsigned int				is_digit(char c);
 
 #endif

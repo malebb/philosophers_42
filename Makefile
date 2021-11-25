@@ -6,11 +6,12 @@
 #    By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/17 19:40:00 by mlebrun           #+#    #+#              #
-#    Updated: 2021/11/24 09:17:50 by mlebrun          ###   ########.fr        #
+#    Updated: 2021/11/25 11:16:28 by mlebrun          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-SRCS = main.c clock.c tasks.c init.c threads.c
+SRCS = srcs/main.c srcs/clock.c srcs/tasks.c srcs/init.c srcs/threads.c \
+		srcs/free.c srcs/parse.c srcs/utils.c
 
 OBJS = ${SRCS:.c=.o}
 

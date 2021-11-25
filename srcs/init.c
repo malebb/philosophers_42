@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 09:29:00 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 11:14:54 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@ MUST_EAT]\n");
 	return (data);
 }
 
-
 void	init_mutexes(t_philo **philos, t_data *data, unsigned int i)
 {
 	if (i == 0)
@@ -87,7 +86,7 @@ void	create_threads(t_philo **philos, t_data *data)
 	}
 }
 
-t_philo		**init_data_philo(t_data *data)
+t_philo	**init_data_philo(t_data *data)
 {
 	unsigned int	i;
 	t_philo			**philos;
@@ -99,7 +98,7 @@ t_philo		**init_data_philo(t_data *data)
 	if (!philos)
 		return (0);
 	i = 0;
-	while  (i < data->nb_philo)
+	while (i < data->nb_philo)
 	{
 		if (!init_philo(&(philos[i]), i, data))
 			return (0);
