@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 14:42:39 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 14:00:51 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 19:04:59 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,17 @@ int	ft_usleep(unsigned long long int time, t_data *data)
 	start_t = get_current_ts();
 	while (slept_t < time)
 	{
+		pthread_mutex_lock(&data->end_lock);
 		if (!data->end && !is_satiate(data))
+		{
+			pthread_mutex_unlock(&data->end_lock);
 			usleep(10);
+		}
 		else
+		{
+			pthread_mutex_unlock(&data->end_lock);
 			return (0);
+		}
 		current_t = get_current_ts();
 		slept_t = current_t - start_t;
 	}

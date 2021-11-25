@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 09:13:50 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 15:59:17 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 19:03:42 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,14 +79,17 @@ void	*checker(void *data)
 		while (i < philos[0]->data->nb_philo)
 		{
 			time = get_prog_time(philos[i]);
+			pthread_mutex_lock(&philos[i]->data->end_lock);
 			if (!is_dead(time, philos[i]))
 			{
 				philos[i]->data->end = 1;
 				end = 1;
 				if (!is_satiate(philos[i]->data))
 					printf("%lld %d died\n", time, philos[i]->id);
+			pthread_mutex_unlock(&philos[i]->data->end_lock);
 				break ;
 			}
+			pthread_mutex_unlock(&philos[i]->data->end_lock);
 			i++;
 		}
 	}

@@ -6,7 +6,7 @@
 #    By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/17 19:40:00 by mlebrun           #+#    #+#              #
-#    Updated: 2021/11/25 15:56:15 by mlebrun          ###   ########.fr        #
+#    Updated: 2021/11/25 19:02:51 by mlebrun          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ SRCS = srcs/main.c srcs/clock.c srcs/tasks.c srcs/init.c srcs/threads.c \
 OBJS = ${SRCS:.c=.o}
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -pthread -I includes/
+CFLAGS = -Wall -Wextra -Werror -pthread -I includes/# -fsanitize=thread
 
 NAME = philo
 
