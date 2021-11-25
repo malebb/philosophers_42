@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/10 18:28:16 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 16:05:30 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 09:25:39 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,44 +61,58 @@ int	is_digit(char c)
 	return (0);
 }
 
-int	is_positive_number(char *argv, int index)
+unsigned int	is_positive(char *argv, unsigned int i, int index)
 {
-	int		i;
+	if (argv[i] == '-' && i == 0)
+	{
+		if (index == 1)
+			printf("Error: NB_OF_PHILO should be a positive number\n");
+		else if (index == 2)
+			printf("Error: TIME_TO_DIE should be a postitive number\n");
+		else if (index == 3)
+			printf("Error: TIME_TO_EAT should be a postitive number\n");
+		else if (index == 4)
+			printf("Error:  TIME_TO_SLEEP should be a postitive number\n");
+		else if (index == 5)
+			printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT should be a postitive number\n");
+		return (0);
+	}
+	return (1);
+}
+
+unsigned int	is_valid(char *argv, unsigned int i, int index)
+{
+	if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' &&
+				i != 0) || (argv[i] == '-' && argv[i + 1] == '\0') ||
+			(i == 0  && argv[i] == '0') || (i == 1 && argv[0] == '-' &&
+				argv[i] == '0'))
+	{
+		if (index == 1)
+			printf("Error: NB_OF_PHILO is invalid\n");
+		else if (index == 2)
+			printf("Error: TIME_TO_DIE is invalid\n");
+		else if (index == 3)
+			printf("Error: TIME_TO_EAT is invalid\n");
+		else if (index == 4)
+			printf("Error:  TIME_TO_SLEEP is invalid\n");
+		else if (index == 5)
+			printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT is invalid\n");
+		return (0); 
+	}
+	return (1);
+}
+
+int	check_numbers(char *argv, int index)
+{
+	unsigned int	i;
 
 	i = 0;
 	while (argv[i] != '\0')
 	{
-		if ((!is_digit(argv[i]) && argv[i] != '-') || (argv[i] == '-' &&
-		i != 0) || (argv[i] == '-' && argv[i + 1] == '\0') ||
-		(i == 0  && argv[i] == '0') || (i == 1 && argv[0] == '-' &&
-		argv[i] == '0'))
-		{
-			if (index == 1)
-				printf("Error: NB_OF_PHILO is invalid\n");
-			else if (index == 2)
-				printf("Error: TIME_TO_DIE is invalid\n");
-			else if (index == 3)
-				printf("Error: TIME_TO_EAT is invalid\n");
-			else if (index == 4)
-				printf("Error:  TIME_TO_SLEEP is invalid\n");
-			else if (index == 5)
-				printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT is invalid\n");
-			return (0); 
-		}
-		if (argv[i] == '-' && i == 0)
-		{
-			if (index == 1)
-				printf("Error: NB_OF_PHILO should be a positive number\n");
-			else if (index == 2)
-				printf("Error: TIME_TO_DIE should be a postitive number\n");
-			else if (index == 3)
-				printf("Error: TIME_TO_EAT should be a postitive number\n");
-			else if (index == 4)
-				printf("Error:  TIME_TO_SLEEP should be a postitive number\n");
-			else if (index == 5)
-				printf("Error:  NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT should be a postitive number\n");
+		if (!is_valid(argv, i, index))
 			return (0);
-		}
+		if (!is_positive(argv, i, index))
+			return (0);
 		i++;
 	}
 	return (1);
@@ -111,7 +125,7 @@ int	parse_arg(char **argv, int argc, t_data *data)
 	i = 1;
 	while (i < argc)
 	{
-		if (!is_positive_number(argv[i], i))
+		if (!check_numbers(argv[i], i))
 			return (0);
 		if (i == 1)
 			data->nb_philo = ft_atoi(argv[i]);
@@ -145,19 +159,10 @@ int	main(int argc, char **argv)
 {
 	
 	unsigned int		i;
-	struct timeval		tp;
-	long long int		first_ts;
 	t_philo				**philos;
 	t_data				*data;
 
-	gettimeofday(&tp, NULL);
-	first_ts = tp.tv_sec * 1000 + (tp.tv_usec / 1000);
-	if (argc < 5 || argc > 6)
-	{
-		printf("Error arguments: NUMBER_OF_PHILOSOPHERS TIME_TO_DIE TIME_TO_EAT TIME_TO_SLEEP [NUMBER_OF_TIMES_EACH_PHILOSOPHER_MUST_EAT]\n");
-		return (1);
-	}
-	data = init_data(first_ts);
+	data = init_data(argc);
 	if (!data)
 		return (1);
 	if (!parse_arg(argv, argc, data))
@@ -165,26 +170,14 @@ int	main(int argc, char **argv)
 		free_data(data);
 		return (1);
 	}
-	init_last_call(&(data->last_call), data->nb_philo);
+	philos = init_data_philo(data);
+	if (!philos)
+		return (1);
 	data->th = malloc(sizeof(pthread_t) * data->nb_philo);
 	if (!data->th)
 	{
 		free_data(data);
-		return (1);
-	}
-	data->forks = malloc((sizeof(pthread_mutex_t) * data->nb_philo));
-	if (!data->forks)
-		return (1);
-	philos = malloc((sizeof(t_philo *) * data->nb_philo));
-	if (!philos)
-		return (1);
-	i = 0;
-	while  (i < data->nb_philo)
-	{
-		if (!init_philo(&(philos[i]), i, data))
-			return (-1);
-		init_mutexes(philos, data, i);
-		i++;
+		return (0);
 	}
 	create_threads(philos, data);
 	i = 0;

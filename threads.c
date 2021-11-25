@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 09:13:50 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 16:01:08 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 09:29:35 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,7 @@ void	*routine(void *data)
 		{
 			think(philo);
 			take_fork(philo);
-			if (!eat(philo))
-				break ;
+			eat(philo);
 			pthread_mutex_unlock(philo->r_fork);
 			pthread_mutex_unlock(philo->l_fork);
 			if (!rest(philo))
