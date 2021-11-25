@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 15:58:33 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 21:41:18 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,5 +112,6 @@ t_philo	**init_data_philo(t_data *data)
 		i++;
 	}
 	pthread_mutex_init(&data->end_lock, NULL);
+	pthread_mutex_init(&data->last_eat_lock, NULL);
 	return (philos);
 }
