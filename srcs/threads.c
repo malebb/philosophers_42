@@ -6,11 +6,12 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 09:13:50 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 13:47:21 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 14:02:05 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "threads.h"
+#include "utils.h"
 
 unsigned int	init_threads(t_data *data, t_philo **philos)
 {

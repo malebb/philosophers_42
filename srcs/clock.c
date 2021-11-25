@@ -6,11 +6,12 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 14:42:39 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 15:29:03 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 14:00:51 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
+#include "utils.h"
 
 long long int	get_prog_time(t_philo *philo)
 {

@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 13:24:33 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 13:20:50 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 13:58:46 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,5 @@ typedef struct s_philo
 	long long int		last_eat;
 	unsigned int		eat_nb;
 }	t_philo;
-
-unsigned int		is_satiate(t_data *data);
 
 #endif

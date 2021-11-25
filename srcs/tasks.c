@@ -6,11 +6,12 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 15:09:53 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/24 15:53:37 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/25 14:01:44 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "tasks.h"
+#include "utils.h"
 
 void	take_fork(t_philo *philo)
 {
