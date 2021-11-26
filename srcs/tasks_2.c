@@ -1,23 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.h                                            :+:      :+:    :+:   */
+/*   tasks_2.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/11/25 11:04:14 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/26 10:24:33 by mlebrun          ###   ########.fr       */
+/*   Created: 2021/11/26 10:17:38 by mlebrun           #+#    #+#             */
+/*   Updated: 2021/11/26 10:25:50 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef UTILS_H
-# define UTILS_H
-# include "philosophers.h"
+#include "tasks.h"
+#include "utils.h"
 
-unsigned int				is_satiate(t_data *data);
-unsigned long long int		ft_atoi(char *nb);
-unsigned int				is_digit(char c);
-void						setup_philos(t_philo **philos, t_data *data);
-long long int				update_last_eat(t_philo *philo);
-
-#endif
+void	take_fork_even(t_philo *philo)
+{
+	pthread_mutex_lock(philo->l_fork);
+	pthread_mutex_lock(&philo->data->end_lock);
+	if (!philo->data->end && !is_satiate(philo->data))
+		printf("%lld %d has taken a fork\n", get_prog_time(philo),
+			philo->id);
+	pthread_mutex_unlock(&philo->data->end_lock);
+	pthread_mutex_lock(philo->r_fork);
+}

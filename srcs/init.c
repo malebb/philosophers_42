@@ -6,11 +6,12 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 15:35:32 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 21:41:18 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/26 11:04:38 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "init.h"
+#include "utils.h"
 
 unsigned int	init_philo(t_philo **philo, int id, t_data *data)
 {
@@ -27,11 +28,7 @@ unsigned int	init_philo(t_philo **philo, int id, t_data *data)
 t_data	*init_data(int argc)
 {
 	t_data				*data;
-	long long int		first_ts;
-	struct timeval		tp;
 
-	gettimeofday(&tp, NULL);
-	first_ts = tp.tv_sec * 1000 + (tp.tv_usec / 1000);
 	if (argc < 5 || argc > 6)
 	{
 		printf("Error arguments: NUMBER_OF_PHILOSOPHERS TIME_TO_DIE \
@@ -42,7 +39,6 @@ MUST_EAT]\n");
 	data = malloc(sizeof(t_data) * (1));
 	if (!data)
 		return (NULL);
-	data->first_ts = first_ts;
 	data->end = 0;
 	data->all_satiate = 0;
 	data->time_each_philo_must_eat = -1;
@@ -77,13 +73,13 @@ void	create_threads(t_philo **philos, t_data *data)
 {
 	unsigned int	i;
 
-	pthread_create(&data->checker, NULL, &checker, philos);
 	i = 0;
 	while (i < data->nb_philo)
 	{
 		pthread_create(&(data->th[i]), NULL, &routine, philos[i]);
 		i++;
 	}
+	pthread_create(&data->checker, NULL, &checker, philos);
 }
 
 t_philo	**init_data_philo(t_data *data)
@@ -97,12 +93,7 @@ t_philo	**init_data_philo(t_data *data)
 	philos = malloc((sizeof(t_philo *) * data->nb_philo));
 	if (!philos)
 		return (0);
-	i = 0;
-	while (i < data->nb_philo)
-	{
-		philos[i] = NULL;
-		i++;
-	}
+	setup_philos(philos, data);
 	i = 0;
 	while (i < data->nb_philo)
 	{
@@ -113,5 +104,6 @@ t_philo	**init_data_philo(t_data *data)
 	}
 	pthread_mutex_init(&data->end_lock, NULL);
 	pthread_mutex_init(&data->last_eat_lock, NULL);
+	pthread_mutex_init(&data->all_satiate_lock, NULL);
 	return (philos);
 }

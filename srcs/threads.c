@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/24 09:13:50 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 23:00:00 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/26 11:04:50 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,14 @@
 
 unsigned int	init_threads(t_data *data, t_philo **philos)
 {
-	unsigned int	i;
+	unsigned int		i;
+	struct timeval		tp;
 
 	data->th = malloc(sizeof(pthread_t) * data->nb_philo);
 	if (!data->th)
 		return (0);
+	gettimeofday(&tp, NULL);
+	data->first_ts = tp.tv_sec * 1000 + (tp.tv_usec / 1000);
 	create_threads(philos, data);
 	i = 0;
 	while (i < data->nb_philo)
@@ -36,23 +39,18 @@ void	*routine(void *data)
 	t_philo				*philo;
 
 	philo = (t_philo *) data;
-	if (philo->data->nb_philo == 1)
+	pthread_mutex_lock(&philo->data->end_lock);
+	while (!philo->data->end && !is_satiate(philo->data))
 	{
-		think(philo);
-		printf("%lld %d has taken a fork\n", get_prog_time(philo), philo->id);
-	}
-	else
-	{
-		pthread_mutex_lock(&philo->data->end_lock);
-		while (!philo->data->end && !is_satiate(philo->data))
-		{
-			pthread_mutex_unlock(&philo->data->end_lock);
-			if (!practice_tasks(philo))
-				break ;
-			pthread_mutex_lock(&philo->data->end_lock);
-		}
 		pthread_mutex_unlock(&philo->data->end_lock);
+		if (!practice_tasks(philo))
+		{
+			pthread_mutex_lock(&philo->data->end_lock);
+			break ;
+		}
+		pthread_mutex_lock(&philo->data->end_lock);
 	}
+	pthread_mutex_unlock(&philo->data->end_lock);
 	return (NULL);
 }
 

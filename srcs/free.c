@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/25 10:00:06 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/25 15:47:14 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/26 08:53:14 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,8 @@ void	free_content(t_data *data, t_philo **philos)
 {
 	destroy_fork_mutexes(data, philos);
 	pthread_mutex_destroy(&data->end_lock);
+	pthread_mutex_destroy(&data->last_eat_lock);
+	pthread_mutex_destroy(&data->all_satiate_lock);
 	free_philos(philos, data->nb_philo);
 	free(data->forks);
 	free(data->th);
