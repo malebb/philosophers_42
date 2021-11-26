@@ -6,7 +6,7 @@
 /*   By: mlebrun <mlebrun@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/23 15:09:53 by mlebrun           #+#    #+#             */
-/*   Updated: 2021/11/26 11:25:22 by mlebrun          ###   ########.fr       */
+/*   Updated: 2021/11/26 12:35:19 by mlebrun          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,15 +87,13 @@ void	think(t_philo *philo)
 
 unsigned int	rest(t_philo *philo)
 {
-	long long int		time;
 	int					sleep_status;
 
-	time = get_prog_time(philo);
 	pthread_mutex_lock(&philo->data->end_lock);
 	if (!philo->data->end && !is_satiate(philo->data))
 	{
 		pthread_mutex_unlock(&philo->data->end_lock);
-		printf("%lld %d is sleeping\n", time, philo->id);
+		printf("%lld %d is sleeping\n", get_prog_time(philo), philo->id);
 	}
 	else
 	{
